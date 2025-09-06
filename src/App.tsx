@@ -29,7 +29,7 @@ const App = () => (
               <Route path="/drivers" element={<Drivers />} />
               <Route path="/operations" element={<Operations />} />
               <Route path="/announcements" element={<Communication />} />
-              <Route path="/system" element={<System />} />
+              <Route path="/settings" element={<System />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
