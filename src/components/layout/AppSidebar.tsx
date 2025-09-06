@@ -39,7 +39,7 @@ const menuItems = [
   { title: "Rides & Deliveries", url: "/rides", icon: MapPin, category: "operations" },
   { title: "Financial", url: "/financial", icon: DollarSign, category: "operations" },
   { title: "Support", url: "/support", icon: MessageSquare, category: "operations" },
-  { title: "Notifications", url: "/notifications", icon: Bell, category: "communication" },
+  { title: "Announcements", url: "/announcements", icon: Bell, category: "announcements" },
   { title: "Settings", url: "/settings", icon: Settings, category: "system" },
 ];
 
@@ -47,7 +47,7 @@ const categories = {
   main: "Overview",
   management: "User Management", 
   operations: "Operations",
-  communication: "Communication",
+  announcements: "Communication",
   system: "System"
 };
 
