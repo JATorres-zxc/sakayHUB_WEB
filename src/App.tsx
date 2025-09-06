@@ -8,6 +8,9 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import Drivers from "./pages/Drivers";
+import Operations from "./pages/Operations";
+import Communication from "./pages/Communication";
+import System from "./pages/System";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +27,9 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/users" element={<Users />} />
               <Route path="/drivers" element={<Drivers />} />
+              <Route path="/operations" element={<Operations />} />
+              <Route path="/communication" element={<Communication />} />
+              <Route path="/system" element={<System />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

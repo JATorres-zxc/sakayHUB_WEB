@@ -30,7 +30,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function SimpleChart() {
+interface SimpleChartProps {
+  data?: any[];
+}
+
+export function SimpleChart({ data: chartData }: SimpleChartProps = {}) {
+  const displayData = chartData || data;
   return (
     <Card className="col-span-4 card-hover">
       <CardHeader>
@@ -38,7 +43,7 @@ export function SimpleChart() {
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={data}>
+          <BarChart data={displayData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
             <XAxis 
               dataKey="name" 
