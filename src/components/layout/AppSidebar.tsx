@@ -36,9 +36,9 @@ const menuItems = [
   { title: "Dashboard", url: "/", icon: Home, category: "main" },
   { title: "Users", url: "/users", icon: Users, category: "management" },
   { title: "Drivers", url: "/drivers", icon: Car, category: "management" },
-  { title: "Rides & Deliveries", url: "/rides", icon: MapPin, category: "operations" },
-  { title: "Financial", url: "/financial", icon: DollarSign, category: "operations" },
-  { title: "Support", url: "/support", icon: MessageSquare, category: "operations" },
+  { title: "Rides & Deliveries", url: "/operations/rides-deliveries", icon: MapPin, category: "operations" },
+  { title: "Financial", url: "/operations/financial", icon: DollarSign, category: "operations" },
+  { title: "Support", url: "/operations/support", icon: MessageSquare, category: "operations" },
   { title: "Announcements", url: "/announcements", icon: Bell, category: "announcements" },
   { title: "Settings", url: "/settings", icon: Settings, category: "system" },
 ];

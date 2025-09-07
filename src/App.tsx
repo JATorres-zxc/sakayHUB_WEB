@@ -8,7 +8,9 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import Drivers from "./pages/Drivers";
-import Operations from "./pages/Operations";
+import RidesDeliveries from "./pages/operations/RidesDeliveries";
+import Financial from "./pages/operations/Financial";
+import Support from "./pages/operations/Support";
 import Communication from "./pages/Communication";
 import System from "./pages/System";
 import NotFound from "./pages/NotFound";
@@ -27,7 +29,9 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/users" element={<Users />} />
               <Route path="/drivers" element={<Drivers />} />
-              <Route path="/operations" element={<Operations />} />
+              <Route path="/operations/rides-deliveries" element={<RidesDeliveries />} />
+              <Route path="/operations/financial" element={<Financial />} />
+              <Route path="/operations/support" element={<Support />} />
               <Route path="/announcements" element={<Communication />} />
               <Route path="/settings" element={<System />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
