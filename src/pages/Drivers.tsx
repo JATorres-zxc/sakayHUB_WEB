@@ -99,7 +99,7 @@ const drivers = [
     phone: "+1 234 567 8905",
     status: "pending",
     vehicleType: "sedan",
-    licenseStatus: "under_review",
+    licenseStatus: "processing",
     rating: 0,
     totalRides: 0,
     earnings: "$0.00",
@@ -127,8 +127,8 @@ const getLicenseBadge = (status: string) => {
     case "verified":
       return <Badge className="status-active">Verified</Badge>;
     case "pending":
-    case "under_review":
-      return <Badge className="status-pending">Under Review</Badge>;
+    case "processing":
+      return <Badge className="status-pending">Processing</Badge>;
     case "rejected":
       return <Badge className="status-suspended">Rejected</Badge>;
     default:

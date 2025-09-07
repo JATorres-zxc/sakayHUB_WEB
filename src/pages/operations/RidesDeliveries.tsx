@@ -59,7 +59,7 @@ const mockDeliveries = [
     package: "Food Order - 2x Burger Meals",
     pickup: "McDonald's Ayala",
     destination: "Unit 502, One Ayala",
-    status: "in-transit",
+    status: "shipping",
     fee: "₱45",
     time: "2:30 PM"
   },
@@ -84,7 +84,7 @@ export default function RidesDeliveries() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ongoing":
-      case "in-transit":
+      case "shipping":
         return "bg-blue-500/10 text-blue-600 border-blue-200";
       case "completed":
       case "delivered":
@@ -99,7 +99,7 @@ export default function RidesDeliveries() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "ongoing":
-      case "in-transit":
+      case "shipping":
         return <Clock className="w-3 h-3" />;
       case "completed":
       case "delivered":

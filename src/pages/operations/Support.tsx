@@ -36,7 +36,7 @@ const mockTickets = [
     subject: "Driver was rude during delivery",
     category: "complaint",
     priority: "medium",
-    status: "in-progress",
+    status: "resolving",
     assignee: "Mike Wilson",
     created: "2024-01-15 13:15",
     lastReply: "2024-01-15 14:20"
@@ -136,7 +136,7 @@ export default function Support() {
     switch (status) {
       case "open":
         return "bg-blue-500/10 text-blue-600 border-blue-200";
-      case "in-progress":
+      case "resolving":
         return "bg-yellow-500/10 text-yellow-600 border-yellow-200";
       case "resolved":
         return "bg-green-500/10 text-green-600 border-green-200";
@@ -155,7 +155,7 @@ export default function Support() {
     switch (status) {
       case "open":
         return <AlertTriangle className="w-3 h-3" />;
-      case "in-progress":
+      case "resolving":
         return <Clock className="w-3 h-3" />;
       case "resolved":
         return <CheckCircle className="w-3 h-3" />;
