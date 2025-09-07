@@ -93,19 +93,18 @@ export function AppSidebar() {
       )}
       collapsible="icon"
     >
-      <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
-            <TruckIcon className="w-5 h-5 text-sidebar-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <div className="animate-fade-in">
-              <h2 className="font-semibold text-sidebar-foreground">RideFlow CRM</h2>
-              <p className="text-xs text-sidebar-foreground/60">Admin Dashboard</p>
-            </div>
-          )}
+      <div className="h-[73px] p-4 border-b border-sidebar-border flex items-center gap-3">
+        <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
+          <TruckIcon className="w-5 h-5 text-sidebar-primary-foreground" />
         </div>
+        {!collapsed && (
+          <div className="animate-fade-in">
+            <h2 className="font-semibold text-sidebar-foreground">SakayHUB</h2>
+            <p className="text-xs text-sidebar-foreground/60">Admin Dashboard</p>
+          </div>
+        )}
       </div>
+
 
       <SidebarContent className="px-2 py-4">
         <div className="space-y-2">
