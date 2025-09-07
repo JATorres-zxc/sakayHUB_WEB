@@ -175,8 +175,8 @@ export default function Users() {
                 <TableHead>Contact</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>KYC</TableHead>
-                <TableHead className="text-right">Rides</TableHead>
-                <TableHead className="text-right">Total Spent</TableHead>
+                <TableHead>Rides</TableHead>
+                <TableHead>Total Spent</TableHead>
                 <TableHead>Last Active</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
@@ -199,15 +199,19 @@ export default function Users() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {getStatusBadge(user.status)}
+                    <div className="flex justify-center">
+                      {getStatusBadge(user.status)}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    {getKycBadge(user.kycStatus)}
+                    <div className="flex justify-center">
+                      {getKycBadge(user.kycStatus)}
+                    </div>
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="font-mono">
                     {user.totalRides}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="font-mono">
                     {user.totalSpent}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">

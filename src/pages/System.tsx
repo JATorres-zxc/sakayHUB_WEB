@@ -160,9 +160,11 @@ const System = () => {
                         <TableCell>{zone.type}</TableCell>
                         <TableCell>{zone.multiplier}</TableCell>
                         <TableCell>
-                          <Badge className={getStatusColor(zone.status)}>
-                            {zone.status}
-                          </Badge>
+                          <div className="flex justify-center">
+                            <Badge className={getStatusColor(zone.status)}>
+                              {zone.status}
+                            </Badge>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -209,9 +211,11 @@ const System = () => {
                       <TableCell>{promo.usage}</TableCell>
                       <TableCell>{promo.expiry}</TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(promo.status)}>
-                          {promo.status}
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge className={getStatusColor(promo.status)}>
+                            {promo.status}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Button variant="outline" size="sm">

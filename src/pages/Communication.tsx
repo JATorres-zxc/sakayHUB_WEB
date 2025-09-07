@@ -140,9 +140,11 @@ const Communication = () => {
                       <TableCell>{announcement.audience}</TableCell>
                       <TableCell>{announcement.date}</TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(announcement.status)}>
-                          {announcement.status}
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge className={getStatusColor(announcement.status)}>
+                            {announcement.status}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Button variant="outline" size="sm">
@@ -180,9 +182,11 @@ const Communication = () => {
                       <TableCell className="font-medium">{notification.title}</TableCell>
                       <TableCell className="max-w-xs truncate">{notification.message}</TableCell>
                       <TableCell>
-                        <Badge className={getNotificationColor(notification.type)}>
-                          {notification.type}
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge className={getNotificationColor(notification.type)}>
+                            {notification.type}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>{notification.sent}</TableCell>
                       <TableCell>
@@ -222,15 +226,19 @@ const Communication = () => {
                     <TableRow key={campaign.id}>
                       <TableCell className="font-medium">{campaign.name}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{campaign.type}</Badge>
+                        <div className="flex justify-center">
+                          <Badge variant="outline">{campaign.type}</Badge>
+                        </div>
                       </TableCell>
                       <TableCell>{campaign.recipients}</TableCell>
                       <TableCell>{campaign.opened || campaign.delivered || '-'}</TableCell>
                       <TableCell>{campaign.clicked}</TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(campaign.status)}>
-                          {campaign.status}
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge className={getStatusColor(campaign.status)}>
+                            {campaign.status}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Button variant="outline" size="sm">

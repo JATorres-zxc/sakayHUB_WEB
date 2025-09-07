@@ -183,10 +183,12 @@ export default function RidesDeliveries() {
                       {ride.pickup} → {ride.destination}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={getStatusColor(ride.status)}>
-                        {getStatusIcon(ride.status)}
-                        <span className="ml-1 capitalize">{ride.status}</span>
-                      </Badge>
+                      <div className="flex justify-center">
+                        <Badge variant="outline" className={getStatusColor(ride.status)}>
+                          {getStatusIcon(ride.status)}
+                          <span className="ml-1 capitalize">{ride.status}</span>
+                        </Badge>
+                      </div>
                     </TableCell>
                     <TableCell className="font-medium">{ride.fare}</TableCell>
                     <TableCell>
@@ -259,10 +261,12 @@ export default function RidesDeliveries() {
                     <TableCell className="font-mono text-sm">{delivery.id}</TableCell>
                     <TableCell className="text-sm">{delivery.package}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={getStatusColor(delivery.status)}>
-                        {getStatusIcon(delivery.status)}
-                        <span className="ml-1 capitalize">{delivery.status}</span>
-                      </Badge>
+                      <div className="flex justify-center">
+                        <Badge variant="outline" className={getStatusColor(delivery.status)}>
+                          {getStatusIcon(delivery.status)}
+                          <span className="ml-1 capitalize">{delivery.status}</span>
+                        </Badge>
+                      </div>
                     </TableCell>
                     <TableCell className="font-medium">{delivery.fee}</TableCell>
                     <TableCell>

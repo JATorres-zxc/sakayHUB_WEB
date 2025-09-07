@@ -215,9 +215,11 @@ export default function Financial() {
                       <TableCell>{txn.customer}</TableCell>
                       <TableCell>{txn.driver}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={getStatusColor(txn.status)}>
-                          {txn.status}
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge variant="outline" className={getStatusColor(txn.status)}>
+                            {txn.status}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{txn.timestamp}</TableCell>
                     </TableRow>
@@ -257,9 +259,11 @@ export default function Financial() {
                       <TableCell className="font-medium">{payout.amount}</TableCell>
                       <TableCell>{payout.rides}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={getStatusColor(payout.status)}>
-                          {payout.status}
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge variant="outline" className={getStatusColor(payout.status)}>
+                            {payout.status}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{payout.requestDate}</TableCell>
                       <TableCell>
@@ -394,9 +398,11 @@ export default function Financial() {
                       <TableCell className="font-medium">{promo.value}</TableCell>
                       <TableCell>{promo.usage}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={getStatusColor(promo.status)}>
-                          {promo.status}
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge variant="outline" className={getStatusColor(promo.status)}>
+                            {promo.status}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{promo.expires}</TableCell>
                       <TableCell>

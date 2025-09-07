@@ -247,9 +247,9 @@ export default function Drivers() {
                 <TableHead>Status</TableHead>
                 <TableHead>Vehicle</TableHead>
                 <TableHead>License</TableHead>
-                <TableHead className="text-right">Rating</TableHead>
-                <TableHead className="text-right">Rides</TableHead>
-                <TableHead className="text-right">Earnings</TableHead>
+                <TableHead>Rating</TableHead>
+                <TableHead>Rides</TableHead>
+                <TableHead>Earnings</TableHead>
                 <TableHead>Last Active</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
@@ -275,7 +275,9 @@ export default function Drivers() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {getStatusBadge(driver.status)}
+                    <div className="flex justify-center">
+                      {getStatusBadge(driver.status)}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -284,11 +286,13 @@ export default function Drivers() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {getLicenseBadge(driver.licenseStatus)}
+                    <div className="flex justify-center">
+                      {getLicenseBadge(driver.licenseStatus)}
+                    </div>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell>
                     {driver.rating > 0 ? (
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-center gap-1">
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                         <span className="font-mono">{driver.rating}</span>
                       </div>
@@ -296,10 +300,10 @@ export default function Drivers() {
                       <span className="text-muted-foreground">N/A</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="font-mono">
                     {driver.totalRides}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="font-mono">
                     {driver.earnings}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">

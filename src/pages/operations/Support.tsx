@@ -251,15 +251,19 @@ export default function Support() {
                       <TableCell className="max-w-xs truncate">{ticket.subject}</TableCell>
                       <TableCell className="capitalize">{ticket.category}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
-                          {ticket.priority}
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
+                            {ticket.priority}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={getStatusColor(ticket.status)}>
-                          {getStatusIcon(ticket.status)}
-                          <span className="ml-1">{ticket.status}</span>
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge variant="outline" className={getStatusColor(ticket.status)}>
+                            {getStatusIcon(ticket.status)}
+                            <span className="ml-1">{ticket.status}</span>
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm">{ticket.assignee}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{ticket.created}</TableCell>
@@ -307,10 +311,12 @@ export default function Support() {
                       <TableCell className="font-medium">{refund.amount}</TableCell>
                       <TableCell className="max-w-xs truncate">{refund.reason}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={getStatusColor(refund.status)}>
-                          {getStatusIcon(refund.status)}
-                          <span className="ml-1">{refund.status}</span>
-                        </Badge>
+                        <div className="flex justify-center">
+                          <Badge variant="outline" className={getStatusColor(refund.status)}>
+                            {getStatusIcon(refund.status)}
+                            <span className="ml-1">{refund.status}</span>
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{refund.requestDate}</TableCell>
                       <TableCell>
