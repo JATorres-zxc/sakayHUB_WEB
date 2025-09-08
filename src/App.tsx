@@ -25,21 +25,51 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <DashboardLayout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/users" element={<Users />} />
-              <Route path="/drivers" element={<Drivers />} />
-              <Route path="/operations/rides-deliveries" element={<RidesDeliveries />} />
-              <Route path="/operations/financial" element={<Financial />} />
-              <Route path="/operations/support" element={<Support />} />
-              <Route path="/announcements" element={<Communication />} />
-              <Route path="/settings" element={<System />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </DashboardLayout>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/dashboard" element={
+              <DashboardLayout>
+                <Dashboard />
+              </DashboardLayout>
+            } />
+            <Route path="/users" element={
+              <DashboardLayout>
+                <Users />
+              </DashboardLayout>
+            } />
+            <Route path="/drivers" element={
+              <DashboardLayout>
+                <Drivers />
+              </DashboardLayout>
+            } />
+            <Route path="/operations/rides-deliveries" element={
+              <DashboardLayout>
+                <RidesDeliveries />
+              </DashboardLayout>
+            } />
+            <Route path="/operations/financial" element={
+              <DashboardLayout>
+                <Financial />
+              </DashboardLayout>
+            } />
+            <Route path="/operations/support" element={
+              <DashboardLayout>
+                <Support />
+              </DashboardLayout>
+            } />
+            <Route path="/announcements" element={
+              <DashboardLayout>
+                <Communication />
+              </DashboardLayout>
+            } />
+            <Route path="/settings" element={
+              <DashboardLayout>
+                <System />
+              </DashboardLayout>
+            } />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

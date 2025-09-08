@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +9,18 @@ import { LogIn } from "lucide-react";
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic
-    console.log("Login attempt:", { username, password });
+    
+    // Simple mock authentication - replace with real authentication logic
+    if (username && password) {
+      console.log("Login successful:", { username });
+      navigate("/dashboard");
+    } else {
+      console.log("Login failed: Please enter both username and password");
+    }
   };
 
   return (

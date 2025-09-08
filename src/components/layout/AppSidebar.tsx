@@ -33,7 +33,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: Home, category: "main" },
+  { title: "Dashboard", url: "/dashboard", icon: Home, category: "main" },
   { title: "Users", url: "/users", icon: Users, category: "management" },
   { title: "Drivers", url: "/drivers", icon: Car, category: "management" },
   { title: "Rides & Deliveries", url: "/operations/rides-deliveries", icon: MapPin, category: "operations" },
