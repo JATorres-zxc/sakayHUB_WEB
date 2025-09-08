@@ -14,6 +14,7 @@ import Support from "./pages/operations/Support";
 import Communication from "./pages/Communication";
 import System from "./pages/System";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <DashboardLayout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/users" element={<Users />} />
               <Route path="/drivers" element={<Drivers />} />
               <Route path="/operations/rides-deliveries" element={<RidesDeliveries />} />
