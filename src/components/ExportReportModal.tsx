@@ -70,13 +70,13 @@ interface DateRange {
 export function ExportReportModal({ open, onOpenChange }: ExportReportModalProps) {
   const [reportType, setReportType] = useState<string>("")
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined })
-  const [selectedType, setSelectedType] = useState<string>("")
-  const [selectedStatus, setSelectedStatus] = useState<string>("")
+  const [selectedType, setSelectedType] = useState<string>("all-types")
+  const [selectedStatus, setSelectedStatus] = useState<string>("all-statuses")
 
   const resetFilters = () => {
     setDateRange({ from: undefined, to: undefined })
-    setSelectedType("")
-    setSelectedStatus("")
+    setSelectedType("all-types")
+    setSelectedStatus("all-statuses")
   }
 
   const handleReportTypeChange = (value: string) => {
@@ -226,7 +226,7 @@ export function ExportReportModal({ open, onOpenChange }: ExportReportModalProps
                           <SelectValue placeholder="All types" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All types</SelectItem>
+                          <SelectItem value="all-types">All types</SelectItem>
                           {getTypeOptions().map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
@@ -245,7 +245,7 @@ export function ExportReportModal({ open, onOpenChange }: ExportReportModalProps
                         <SelectValue placeholder="All statuses" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All statuses</SelectItem>
+                        <SelectItem value="all-statuses">All statuses</SelectItem>
                         {getStatusOptions().map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
