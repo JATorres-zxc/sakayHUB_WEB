@@ -23,16 +23,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const getCookie = (name: string) => {
-    const cookieString = document.cookie;
-    if (!cookieString) return null;
-    const cookies = cookieString.split(";").map(c => c.trim());
-    for (const cookie of cookies) {
-      if (cookie.startsWith(name + "=")) {
-        return decodeURIComponent(cookie.substring(name.length + 1));
-      }
+  const fetchCsrfToken = async (): Promise<string> => {
+    try {
+      const res = await fetch("/api/users/csrf/", { credentials: "include" });
+      const data = await res.json();
+      return data?.csrftoken || "";
+    } catch {
+      return "";
     }
-    return null;
   };
 
   const refreshUser = async () => {
@@ -69,9 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       // Ensure CSRF exists
-      await fetch("/api/users/csrf/", { credentials: "include" });
+      const csrftoken = await fetchCsrfToken();
       // Logout
-      const csrftoken = getCookie("csrftoken") || "";
       const res = await fetch("/api/users/logout/", {
         method: "POST",
         credentials: "include",

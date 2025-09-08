@@ -16,31 +16,22 @@ export default function Login() {
   const { refreshUser } = useAuth();
   // Redirects are handled by PublicOnly route guard now
 
-  const getCookie = (name: string) => {
-    const cookieString = document.cookie;
-    if (!cookieString) return null;
-    const cookies = cookieString.split(";").map(c => c.trim());
-    for (const cookie of cookies) {
-      if (cookie.startsWith(name + "=")) {
-        return decodeURIComponent(cookie.substring(name.length + 1));
-      }
-    }
-    return null;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
     try {
-      // 1) Ensure CSRF cookie exists
-      await fetch("/api/users/csrf/", {
+      // 1) Get CSRF token from server (cookie is HttpOnly)
+      const csrfResp = await fetch("/api/users/csrf/", {
         method: "GET",
         credentials: "include",
       });
-
-      const csrftoken = getCookie("csrftoken") || "";
+      let csrftoken = "";
+      try {
+        const data = await csrfResp.json();
+        csrftoken = data?.csrftoken || "";
+      } catch {}
 
       // 2) Perform login using session auth
       const response = await fetch("/api/users/login/", {
