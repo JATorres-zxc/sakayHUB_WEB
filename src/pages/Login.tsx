@@ -38,7 +38,6 @@ export default function Login() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-2">
-              <LogIn className="w-5 h-5" />
               Sign In
             </CardTitle>
           </CardHeader>
@@ -79,7 +78,7 @@ export default function Login() {
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground">
           <p>SakayHUB CRM Dashboard</p>
-          <p>Secure admin access only</p>
+          <p>Admin access only</p>
         </div>
       </div>
     </div>
