@@ -14,10 +14,12 @@ import {
   Gift,
   ArrowUpDown,
   Check,
-  X
+  X,
+  Download
 } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { SimpleChart } from "@/components/dashboard/SimpleChart";
+import { ExportReportModal } from "@/components/ExportReportModal";
 
 const mockTransactions = [
   {
@@ -114,6 +116,7 @@ export default function Financial() {
   const [farePerKm, setFarePerKm] = useState("12");
   const [commissionRate, setCommissionRate] = useState("20");
   const [surgeMultiplier, setSurgeMultiplier] = useState("1.5");
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -136,8 +139,8 @@ export default function Financial() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Financial Management</h1>
-        <Button className="gap-2">
-          <TrendingUp className="w-4 h-4" />
+        <Button className="gap-2" onClick={() => setExportModalOpen(true)}>
+          <Download className="w-4 h-4" />
           Export Report
         </Button>
       </div>
@@ -418,6 +421,11 @@ export default function Financial() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      <ExportReportModal 
+        open={exportModalOpen} 
+        onOpenChange={setExportModalOpen} 
+      />
     </div>
   );
 }
