@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, User } from "lucide-react";
+import { useAuth } from "@/auth/AuthContext";
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useAuth();
 
   return (
     <SidebarProvider>
@@ -53,12 +55,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                  <DropdownMenuItem className="flex-col items-start">
+                    <div className="text-sm font-medium">{user?.username || "User"}</div>
+                    <div className="text-xs text-muted-foreground">{user?.email || ""}</div>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>
                     <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

@@ -1,5 +1,9 @@
 from django.urls import path
+from . import views
 
 urlpatterns = [
-    # You can add your API endpoints here later
+    path('csrf/', views.csrf, name='csrf'),
+    path('login/', views.login, name='login'),
+    path('logout/', views.logout, name='logout'),
+    path('me/', views.me, name='me'),
 ]

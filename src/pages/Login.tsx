@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/auth/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,17 +10,68 @@ import { LogIn } from "lucide-react";
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
+  // Redirects are handled by PublicOnly route guard now
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const getCookie = (name: string) => {
+    const cookieString = document.cookie;
+    if (!cookieString) return null;
+    const cookies = cookieString.split(";").map(c => c.trim());
+    for (const cookie of cookies) {
+      if (cookie.startsWith(name + "=")) {
+        return decodeURIComponent(cookie.substring(name.length + 1));
+      }
+    }
+    return null;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Simple mock authentication - replace with real authentication logic
-    if (username && password) {
-      console.log("Login successful:", { username });
-      navigate("/dashboard");
-    } else {
-      console.log("Login failed: Please enter both username and password");
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      // 1) Ensure CSRF cookie exists
+      await fetch("/api/users/csrf/", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const csrftoken = getCookie("csrftoken") || "";
+
+      // 2) Perform login using session auth
+      const response = await fetch("/api/users/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrftoken,
+        },
+        credentials: "include",
+        body: new URLSearchParams({ username, password }).toString(),
+      });
+
+      if (!response.ok) {
+        let detail = "Login failed";
+        try {
+          const data = await response.json();
+          if (data?.detail) detail = data.detail;
+        } catch {
+          // ignore JSON parse errors
+        }
+        setError(detail);
+        return;
+      }
+
+      // Refresh auth context so guards recognize authenticated state
+      await refreshUser();
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,9 +119,15 @@ export default function Login() {
                 />
               </div>
 
-              <Button type="submit" className="w-full gap-2">
+              {error && (
+                <p className="text-sm text-red-500" role="alert">
+                  {error}
+                </p>
+              )}
+
+              <Button type="submit" className="w-full gap-2" disabled={isLoading}>
                 <LogIn className="w-4 h-4" />
-                Sign In
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
