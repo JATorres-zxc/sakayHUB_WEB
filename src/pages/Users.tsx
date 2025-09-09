@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Table, 
   TableBody, 
@@ -17,6 +18,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { 
   Search, 
   Filter, 
@@ -96,6 +102,8 @@ export default function Users() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(5);
   const [count, setCount] = useState(0);
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [kycFilters, setKycFilters] = useState<string[]>([]);
 
   useEffect(() => {
     let ignore = false;
@@ -148,10 +156,37 @@ export default function Users() {
     }));
   }, [apiUsers]);
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilters.length === 0 || statusFilters.includes(user.status);
+    const matchesKyc = kycFilters.length === 0 || kycFilters.includes(user.kycStatus);
+    
+    return matchesSearch && matchesStatus && matchesKyc;
+  });
+
+  const toggleStatusFilter = (status: string) => {
+    setStatusFilters(prev =>
+      prev.includes(status)
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const toggleKycFilter = (kyc: string) => {
+    setKycFilters(prev =>
+      prev.includes(kyc)
+        ? prev.filter(k => k !== kyc)
+        : [...prev, kyc]
+    );
+  };
+
+  const clearFilters = () => {
+    setStatusFilters([]);
+    setKycFilters([]);
+  };
+
+  const hasActiveFilters = statusFilters.length > 0 || kycFilters.length > 0;
 
   return (
     <div className="space-y-6">
@@ -182,10 +217,80 @@ export default function Users() {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" className="gap-2">
-              <Filter className="w-4 h-4" />
-              Filters
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filters
+                  {hasActiveFilters && (
+                    <Badge variant="secondary" className="ml-1 text-xs">
+                      {statusFilters.length + kycFilters.length}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">Filters</h4>
+                    {hasActiveFilters && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={clearFilters}
+                        className="text-muted-foreground"
+                      >
+                        Clear all
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Status</h5>
+                      <div className="space-y-2">
+                        {["active", "suspended", "inactive"].map((status) => (
+                          <div key={status} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`status-${status}`}
+                              checked={statusFilters.includes(status)}
+                              onCheckedChange={() => toggleStatusFilter(status)}
+                            />
+                            <label
+                              htmlFor={`status-${status}`}
+                              className="text-sm capitalize cursor-pointer"
+                            >
+                              {status}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">KYC Status</h5>
+                      <div className="space-y-2">
+                        {["verified", "pending", "rejected"].map((kyc) => (
+                          <div key={kyc} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`kyc-${kyc}`}
+                              checked={kycFilters.includes(kyc)}
+                              onCheckedChange={() => toggleKycFilter(kyc)}
+                            />
+                            <label
+                              htmlFor={`kyc-${kyc}`}
+                              className="text-sm capitalize cursor-pointer"
+                            >
+                              {kyc}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </CardHeader>
       </Card>
