@@ -4,6 +4,13 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.views.decorators.http import require_POST, require_GET
 from django.core.cache import cache
 from django.middleware.csrf import rotate_token, get_token
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from .models import User
+from .serializers import UserSerializer
+from .pagination import UserPagination
 
 
 MAX_FAILED_LOGINS = 5
@@ -87,3 +94,14 @@ def me(request):
         "is_superuser": user.is_superuser,
         "email": user.email,
     })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_users(request):
+    # CRM users are separate from auth users; list business users from our User model
+    queryset = User.objects.all().order_by("id")
+    paginator = UserPagination()
+    page = paginator.paginate_queryset(queryset, request)
+    serializer = UserSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)

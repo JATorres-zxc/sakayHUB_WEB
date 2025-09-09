@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,69 +27,40 @@ import {
   Ban,
   CheckCircle
 } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationLink,
+} from "@/components/ui/pagination";
 
-const users = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 234 567 8901",
-    status: "active",
-    kycStatus: "verified",
-    totalRides: 45,
-    totalSpent: "$1,234.50",
-    joinDate: "2024-01-15",
-    lastActive: "2 hours ago"
-  },
-  {
-    id: 2,
-    name: "Sarah Wilson",
-    email: "sarah.wilson@example.com",
-    phone: "+1 234 567 8902",
-    status: "active",
-    kycStatus: "pending",
-    totalRides: 23,
-    totalSpent: "$567.80",
-    joinDate: "2024-02-20",
-    lastActive: "1 day ago"
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    email: "mike.johnson@example.com",
-    phone: "+1 234 567 8903",
-    status: "suspended",
-    kycStatus: "verified",
-    totalRides: 78,
-    totalSpent: "$2,345.20",
-    joinDate: "2023-11-10",
-    lastActive: "3 days ago"
-  },
-  {
-    id: 4,
-    name: "Emma Davis",
-    email: "emma.davis@example.com",
-    phone: "+1 234 567 8904",
-    status: "active",
-    kycStatus: "rejected",
-    totalRides: 12,
-    totalSpent: "$234.70",
-    joinDate: "2024-03-05",
-    lastActive: "5 hours ago"
-  },
-  {
-    id: 5,
-    name: "Alex Brown",
-    email: "alex.brown@example.com",
-    phone: "+1 234 567 8905",
-    status: "inactive",
-    kycStatus: "verified",
-    totalRides: 156,
-    totalSpent: "$4,567.90",
-    joinDate: "2023-08-22",
-    lastActive: "2 weeks ago"
-  },
-];
+type ApiUser = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  status: "active" | "suspended" | "inactive" | string
+  kyc_status: "verified" | "pending" | "rejected" | string
+  total_rides: number
+  total_spent: string | number
+  join_date: string
+  last_active: string
+}
+
+type UiUser = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  status: string
+  kycStatus: string
+  totalRides: number
+  totalSpent: string
+  joinDate: string
+  lastActive: string
+}
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -119,6 +90,63 @@ const getKycBadge = (status: string) => {
 
 export default function Users() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [apiUsers, setApiUsers] = useState<ApiUser[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(5);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+        const res = await fetch(`/api/users/list/?${params.toString()}`, {
+          credentials: "include",
+          headers: {
+            "Accept": "application/json",
+          },
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to load users: ${res.status}`);
+        }
+        const data: { count: number; next: string | null; previous: string | null; results: ApiUser[] } = await res.json();
+        if (!ignore) {
+          setApiUsers(data.results);
+          setCount(data.count);
+        }
+      } catch (e: any) {
+        if (!ignore) setError(e?.message ?? "Unknown error");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    fetchUsers();
+    return () => { ignore = true; controller.abort(); };
+  }, [page, pageSize]);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(count / pageSize)), [count, pageSize]);
+
+  const users: UiUser[] = useMemo(() => {
+    if (!apiUsers) return [];
+    return apiUsers.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      status: u.status,
+      kycStatus: u.kyc_status,
+      totalRides: u.total_rides,
+      totalSpent: typeof u.total_spent === "number" ? `$${u.total_spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : u.total_spent,
+      joinDate: new Date(u.join_date).toISOString().slice(0, 10),
+      lastActive: new Date(u.last_active).toLocaleString(),
+    }));
+  }, [apiUsers]);
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -135,10 +163,10 @@ export default function Users() {
             Manage customer accounts and KYC verification
           </p>
         </div>
-        <Button className="gap-2">
+        {/* <Button className="gap-2">
           <Plus className="w-4 h-4" />
           Add User
-        </Button>
+        </Button> */}
       </div>
 
       {/* Search and Filters */}
@@ -168,6 +196,8 @@ export default function Users() {
           <CardTitle>All Users ({filteredUsers.length})</CardTitle>
         </CardHeader>
         <CardContent>
+          {loading && <div className="text-sm text-muted-foreground">Loading users...</div>}
+          {error && <div className="text-sm text-destructive">{error}</div>}
           <Table>
             <TableHeader>
               <TableRow>
@@ -248,6 +278,37 @@ export default function Users() {
               ))}
             </TableBody>
           </Table>
+
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
+                  />
+                </PaginationItem>
+                {/* Simple numeric pages for first/last + current neighbors */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2)).map((p) => (
+                  <PaginationItem key={p}>
+                    <PaginationLink
+                      href="#"
+                      isActive={p === page}
+                      onClick={(e) => { e.preventDefault(); setPage(p); }}
+                    >
+                      {p}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </CardContent>
       </Card>
     </div>

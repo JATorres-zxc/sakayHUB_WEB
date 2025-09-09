@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,84 +30,46 @@ import {
   DollarSign,
   Star
 } from "lucide-react";
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
-const drivers = [
-  {
-    id: 1,
-    name: "David Rodriguez",
-    email: "david.rodriguez@example.com",
-    phone: "+1 234 567 8901",
-    status: "active",
-    vehicleType: "sedan",
-    licenseStatus: "verified",
-    rating: 4.8,
-    totalRides: 234,
-    earnings: "$3,456.80",
-    online: true,
-    joinDate: "2024-01-10",
-    lastActive: "Online"
-  },
-  {
-    id: 2,
-    name: "Maria Garcia",
-    email: "maria.garcia@example.com",
-    phone: "+1 234 567 8902",
-    status: "active",
-    vehicleType: "suv",
-    licenseStatus: "pending",
-    rating: 4.9,
-    totalRides: 189,
-    earnings: "$2,789.50",
-    online: false,
-    joinDate: "2024-02-15",
-    lastActive: "2 hours ago"
-  },
-  {
-    id: 3,
-    name: "James Wilson",
-    email: "james.wilson@example.com",
-    phone: "+1 234 567 8903",
-    status: "suspended",
-    vehicleType: "motorcycle",
-    licenseStatus: "verified",
-    rating: 4.2,
-    totalRides: 456,
-    earnings: "$5,234.20",
-    online: false,
-    joinDate: "2023-11-20",
-    lastActive: "1 week ago"
-  },
-  {
-    id: 4,
-    name: "Lisa Thompson",
-    email: "lisa.thompson@example.com",
-    phone: "+1 234 567 8904",
-    status: "active",
-    vehicleType: "van",
-    licenseStatus: "verified",
-    rating: 4.7,
-    totalRides: 123,
-    earnings: "$1,867.30",
-    online: true,
-    joinDate: "2024-03-01",
-    lastActive: "Online"
-  },
-  {
-    id: 5,
-    name: "Robert Chen",
-    email: "robert.chen@example.com",
-    phone: "+1 234 567 8905",
-    status: "pending",
-    vehicleType: "sedan",
-    licenseStatus: "processing",
-    rating: 0,
-    totalRides: 0,
-    earnings: "$0.00",
-    online: false,
-    joinDate: "2024-03-20",
-    lastActive: "Never"
-  },
-];
+type ApiDriver = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  status: string
+  vehicle_type: string
+  license_status: string
+  rating: number
+  total_rides: number
+  earnings: number | string
+  online: boolean
+  join_date: string
+  last_active: string
+}
+
+type UiDriver = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  status: string
+  vehicleType: string
+  licenseStatus: string
+  rating: number
+  totalRides: number
+  earnings: string
+  online: boolean
+  joinDate: string
+  lastActive: string
+}
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -142,6 +104,64 @@ const getVehicleIcon = (type: string) => {
 
 export default function Drivers() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [apiDrivers, setApiDrivers] = useState<ApiDriver[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(5);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchDrivers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+        const res = await fetch(`/api/drivers/list/?${params.toString()}`, {
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to load drivers: ${res.status}`);
+        }
+        const data: { count: number; next: string | null; previous: string | null; results: ApiDriver[] } = await res.json();
+        if (!ignore) {
+          setApiDrivers(data.results);
+          setCount(data.count);
+        }
+      } catch (e: any) {
+        if (!ignore) setError(e?.message ?? "Unknown error");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    fetchDrivers();
+    return () => { ignore = true; controller.abort(); };
+  }, [page, pageSize]);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(count / pageSize)), [count, pageSize]);
+
+  const drivers: UiDriver[] = useMemo(() => {
+    if (!apiDrivers) return [];
+    return apiDrivers.map((d) => ({
+      id: d.id,
+      name: d.name,
+      email: d.email,
+      phone: d.phone,
+      status: d.status,
+      vehicleType: d.vehicle_type,
+      licenseStatus: d.license_status,
+      rating: d.rating,
+      totalRides: d.total_rides,
+      earnings: typeof d.earnings === "number" ? `$${d.earnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : d.earnings,
+      online: d.online,
+      joinDate: new Date(d.join_date).toISOString().slice(0, 10),
+      lastActive: new Date(d.last_active).toLocaleString(),
+    }));
+  }, [apiDrivers]);
 
   const filteredDrivers = drivers.filter(driver =>
     driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -158,10 +178,10 @@ export default function Drivers() {
             Manage driver accounts, vehicles, and documentation
           </p>
         </div>
-        <Button className="gap-2">
+        {/* <Button className="gap-2">
           <Plus className="w-4 h-4" />
           Add Driver
-        </Button>
+        </Button> */}
       </div>
 
       {/* Quick Stats */}
@@ -239,6 +259,8 @@ export default function Drivers() {
           <CardTitle>All Drivers ({filteredDrivers.length})</CardTitle>
         </CardHeader>
         <CardContent>
+          {loading && <div className="text-sm text-muted-foreground">Loading drivers...</div>}
+          {error && <div className="text-sm text-destructive">{error}</div>}
           <Table>
             <TableHeader>
               <TableRow>
@@ -340,6 +362,36 @@ export default function Drivers() {
               ))}
             </TableBody>
           </Table>
+
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2)).map((p) => (
+                  <PaginationItem key={p}>
+                    <PaginationLink
+                      href="#"
+                      isActive={p === page}
+                      onClick={(e) => { e.preventDefault(); setPage(p); }}
+                    >
+                      {p}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </CardContent>
       </Card>
     </div>
