@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Table, 
   TableBody, 
@@ -17,6 +18,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { 
   Search, 
   Filter, 
@@ -142,11 +148,65 @@ const getVehicleIcon = (type: string) => {
 
 export default function Drivers() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [onlineFilters, setOnlineFilters] = useState<string[]>([]);
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [vehicleFilters, setVehicleFilters] = useState<string[]>([]);
+  const [licenseFilters, setLicenseFilters] = useState<string[]>([]);
 
-  const filteredDrivers = drivers.filter(driver =>
-    driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDrivers = drivers.filter(driver => {
+    const matchesSearch = driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         driver.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesOnline = onlineFilters.length === 0 || 
+                         (onlineFilters.includes("online") && driver.online) ||
+                         (onlineFilters.includes("offline") && !driver.online);
+    const matchesStatus = statusFilters.length === 0 || statusFilters.includes(driver.status);
+    const matchesVehicle = vehicleFilters.length === 0 || vehicleFilters.includes(driver.vehicleType);
+    const matchesLicense = licenseFilters.length === 0 || licenseFilters.includes(driver.licenseStatus);
+    
+    return matchesSearch && matchesOnline && matchesStatus && matchesVehicle && matchesLicense;
+  });
+
+  const toggleOnlineFilter = (online: string) => {
+    setOnlineFilters(prev =>
+      prev.includes(online)
+        ? prev.filter(o => o !== online)
+        : [...prev, online]
+    );
+  };
+
+  const toggleStatusFilter = (status: string) => {
+    setStatusFilters(prev =>
+      prev.includes(status)
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  const toggleVehicleFilter = (vehicle: string) => {
+    setVehicleFilters(prev =>
+      prev.includes(vehicle)
+        ? prev.filter(v => v !== vehicle)
+        : [...prev, vehicle]
+    );
+  };
+
+  const toggleLicenseFilter = (license: string) => {
+    setLicenseFilters(prev =>
+      prev.includes(license)
+        ? prev.filter(l => l !== license)
+        : [...prev, license]
+    );
+  };
+
+  const clearFilters = () => {
+    setOnlineFilters([]);
+    setStatusFilters([]);
+    setVehicleFilters([]);
+    setLicenseFilters([]);
+  };
+
+  const hasActiveFilters = onlineFilters.length > 0 || statusFilters.length > 0 || 
+                          vehicleFilters.length > 0 || licenseFilters.length > 0;
 
   return (
     <div className="space-y-6">
@@ -225,10 +285,122 @@ export default function Drivers() {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" className="gap-2">
-              <Filter className="w-4 h-4" />
-              Filters
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filters
+                  {hasActiveFilters && (
+                    <Badge variant="secondary" className="ml-1 text-xs">
+                      {onlineFilters.length + statusFilters.length + vehicleFilters.length + licenseFilters.length}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">Filters</h4>
+                    {hasActiveFilters && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={clearFilters}
+                        className="text-muted-foreground"
+                      >
+                        Clear all
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Online Status</h5>
+                      <div className="space-y-2">
+                        {["online", "offline"].map((online) => (
+                          <div key={online} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`online-${online}`}
+                              checked={onlineFilters.includes(online)}
+                              onCheckedChange={() => toggleOnlineFilter(online)}
+                            />
+                            <label
+                              htmlFor={`online-${online}`}
+                              className="text-sm capitalize cursor-pointer"
+                            >
+                              {online}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Status</h5>
+                      <div className="space-y-2">
+                        {["active", "suspended", "pending"].map((status) => (
+                          <div key={status} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`status-${status}`}
+                              checked={statusFilters.includes(status)}
+                              onCheckedChange={() => toggleStatusFilter(status)}
+                            />
+                            <label
+                              htmlFor={`status-${status}`}
+                              className="text-sm capitalize cursor-pointer"
+                            >
+                              {status}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Vehicle Type</h5>
+                      <div className="space-y-2">
+                        {["sedan", "suv", "motorcycle", "van"].map((vehicle) => (
+                          <div key={vehicle} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`vehicle-${vehicle}`}
+                              checked={vehicleFilters.includes(vehicle)}
+                              onCheckedChange={() => toggleVehicleFilter(vehicle)}
+                            />
+                            <label
+                              htmlFor={`vehicle-${vehicle}`}
+                              className="text-sm capitalize cursor-pointer"
+                            >
+                              {vehicle}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">License Status</h5>
+                      <div className="space-y-2">
+                        {["verified", "pending", "processing", "rejected"].map((license) => (
+                          <div key={license} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`license-${license}`}
+                              checked={licenseFilters.includes(license)}
+                              onCheckedChange={() => toggleLicenseFilter(license)}
+                            />
+                            <label
+                              htmlFor={`license-${license}`}
+                              className="text-sm capitalize cursor-pointer"
+                            >
+                              {license}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </CardHeader>
       </Card>
