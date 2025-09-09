@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { UniversalToastProvider } from "@/components/ui/universal-toast";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import Drivers from "./pages/Drivers";
@@ -37,73 +38,75 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
-              <Route path="/" element={<PublicOnly><Login /></PublicOnly>} />
-              <Route path="/dashboard" element={
-                <RequireAuth>
-                  <DashboardLayout>
-                    <Dashboard />
-                  </DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/users" element={
-                <RequireAuth>
-                  <DashboardLayout>
-                    <Users />
-                  </DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/drivers" element={
-                <RequireAuth>
-                  <DashboardLayout>
-                    <Drivers />
-                  </DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/operations/rides-deliveries" element={
-                <RequireAuth>
-                  <DashboardLayout>
-                    <RidesDeliveries />
-                  </DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/operations/financial" element={
-                <RequireAuth>
-                  <DashboardLayout>
-                    <Financial />
-                  </DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/operations/support" element={
-                <RequireAuth>
-                  <DashboardLayout>
-                    <Support />
-                  </DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/announcements" element={
-                <RequireAuth>
-                  <DashboardLayout>
-                    <Communication />
-                  </DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/settings" element={
-                <RequireAuth>
-                  <DashboardLayout>
-                    <System />
-                  </DashboardLayout>
-                </RequireAuth>
-              } />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
+        <UniversalToastProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <Routes>
+                <Route path="/" element={<PublicOnly><Login /></PublicOnly>} />
+                <Route path="/dashboard" element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Dashboard />
+                    </DashboardLayout>
+                  </RequireAuth>
+                } />
+                <Route path="/users" element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Users />
+                    </DashboardLayout>
+                  </RequireAuth>
+                } />
+                <Route path="/drivers" element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Drivers />
+                    </DashboardLayout>
+                  </RequireAuth>
+                } />
+                <Route path="/operations/rides-deliveries" element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <RidesDeliveries />
+                    </DashboardLayout>
+                  </RequireAuth>
+                } />
+                <Route path="/operations/financial" element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Financial />
+                    </DashboardLayout>
+                  </RequireAuth>
+                } />
+                <Route path="/operations/support" element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Support />
+                    </DashboardLayout>
+                  </RequireAuth>
+                } />
+                <Route path="/announcements" element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Communication />
+                    </DashboardLayout>
+                  </RequireAuth>
+                } />
+                <Route path="/settings" element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <System />
+                    </DashboardLayout>
+                  </RequireAuth>
+                } />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthProvider>
+          </BrowserRouter>
+        </UniversalToastProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
