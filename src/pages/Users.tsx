@@ -23,6 +23,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { 
   Search, 
   Filter, 
@@ -229,14 +235,14 @@ export default function Users() {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="space-y-4">
+              <PopoverContent className="w-72 max-h-80 overflow-y-auto" align="end">
+                <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Filters</h4>
                     {hasActiveFilters && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={clearFilters}
                         className="text-muted-foreground"
                       >
@@ -244,50 +250,46 @@ export default function Users() {
                       </Button>
                     )}
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">Status</h5>
-                      <div className="space-y-2">
-                        {["active", "suspended", "inactive"].map((status) => (
-                          <div key={status} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`status-${status}`}
-                              checked={statusFilters.includes(status)}
-                              onCheckedChange={() => toggleStatusFilter(status)}
-                            />
-                            <label
-                              htmlFor={`status-${status}`}
-                              className="text-sm capitalize cursor-pointer"
-                            >
-                              {status}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">KYC Status</h5>
-                      <div className="space-y-2">
-                        {["verified", "pending", "rejected"].map((kyc) => (
-                          <div key={kyc} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`kyc-${kyc}`}
-                              checked={kycFilters.includes(kyc)}
-                              onCheckedChange={() => toggleKycFilter(kyc)}
-                            />
-                            <label
-                              htmlFor={`kyc-${kyc}`}
-                              className="text-sm capitalize cursor-pointer"
-                            >
-                              {kyc}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="status">
+                      <AccordionTrigger className="text-sm">Status</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2">
+                          {["active", "suspended", "inactive"].map((status) => (
+                            <div key={status} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`status-${status}`}
+                                checked={statusFilters.includes(status)}
+                                onCheckedChange={() => toggleStatusFilter(status)}
+                              />
+                              <label htmlFor={`status-${status}`} className="text-sm capitalize cursor-pointer">
+                                {status}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="kyc">
+                      <AccordionTrigger className="text-sm">KYC Status</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2">
+                          {["verified", "pending", "rejected"].map((kyc) => (
+                            <div key={kyc} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`kyc-${kyc}`}
+                                checked={kycFilters.includes(kyc)}
+                                onCheckedChange={() => toggleKycFilter(kyc)}
+                              />
+                              <label htmlFor={`kyc-${kyc}`} className="text-sm capitalize cursor-pointer">
+                                {kyc}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </PopoverContent>
             </Popover>

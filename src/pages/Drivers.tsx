@@ -44,6 +44,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 type ApiDriver = {
   id: number
@@ -346,8 +352,8 @@ export default function Drivers() {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="space-y-4">
+              <PopoverContent className="w-72 max-h-80 overflow-y-auto" align="end">
+                <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Filters</h4>
                     {hasActiveFilters && (
@@ -361,92 +367,84 @@ export default function Drivers() {
                       </Button>
                     )}
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">Online Status</h5>
-                      <div className="space-y-2">
-                        {["online", "offline"].map((online) => (
-                          <div key={online} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`online-${online}`}
-                              checked={onlineFilters.includes(online)}
-                              onCheckedChange={() => toggleOnlineFilter(online)}
-                            />
-                            <label
-                              htmlFor={`online-${online}`}
-                              className="text-sm capitalize cursor-pointer"
-                            >
-                              {online}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">Status</h5>
-                      <div className="space-y-2">
-                        {["active", "suspended", "pending"].map((status) => (
-                          <div key={status} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`status-${status}`}
-                              checked={statusFilters.includes(status)}
-                              onCheckedChange={() => toggleStatusFilter(status)}
-                            />
-                            <label
-                              htmlFor={`status-${status}`}
-                              className="text-sm capitalize cursor-pointer"
-                            >
-                              {status}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">Vehicle Type</h5>
-                      <div className="space-y-2">
-                        {["sedan", "suv", "motorcycle", "van"].map((vehicle) => (
-                          <div key={vehicle} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`vehicle-${vehicle}`}
-                              checked={vehicleFilters.includes(vehicle)}
-                              onCheckedChange={() => toggleVehicleFilter(vehicle)}
-                            />
-                            <label
-                              htmlFor={`vehicle-${vehicle}`}
-                              className="text-sm capitalize cursor-pointer"
-                            >
-                              {vehicle}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">License Status</h5>
-                      <div className="space-y-2">
-                        {["verified", "pending", "processing", "rejected"].map((license) => (
-                          <div key={license} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`license-${license}`}
-                              checked={licenseFilters.includes(license)}
-                              onCheckedChange={() => toggleLicenseFilter(license)}
-                            />
-                            <label
-                              htmlFor={`license-${license}`}
-                              className="text-sm capitalize cursor-pointer"
-                            >
-                              {license}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="online">
+                      <AccordionTrigger className="text-sm">Online Status</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2">
+                          {["online", "offline"].map((online) => (
+                            <div key={online} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`online-${online}`}
+                                checked={onlineFilters.includes(online)}
+                                onCheckedChange={() => toggleOnlineFilter(online)}
+                              />
+                              <label htmlFor={`online-${online}`} className="text-sm capitalize cursor-pointer">
+                                {online}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="status">
+                      <AccordionTrigger className="text-sm">Status</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2">
+                          {["active", "suspended", "pending"].map((status) => (
+                            <div key={status} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`status-${status}`}
+                                checked={statusFilters.includes(status)}
+                                onCheckedChange={() => toggleStatusFilter(status)}
+                              />
+                              <label htmlFor={`status-${status}`} className="text-sm capitalize cursor-pointer">
+                                {status}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="vehicle">
+                      <AccordionTrigger className="text-sm">Vehicle Type</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2">
+                          {["sedan", "suv", "motorcycle", "van"].map((vehicle) => (
+                            <div key={vehicle} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`vehicle-${vehicle}`}
+                                checked={vehicleFilters.includes(vehicle)}
+                                onCheckedChange={() => toggleVehicleFilter(vehicle)}
+                              />
+                              <label htmlFor={`vehicle-${vehicle}`} className="text-sm capitalize cursor-pointer">
+                                {vehicle}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="license">
+                      <AccordionTrigger className="text-sm">License Status</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2">
+                          {["verified", "pending", "processing", "rejected"].map((license) => (
+                            <div key={license} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`license-${license}`}
+                                checked={licenseFilters.includes(license)}
+                                onCheckedChange={() => toggleLicenseFilter(license)}
+                              />
+                              <label htmlFor={`license-${license}`} className="text-sm capitalize cursor-pointer">
+                                {license}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </PopoverContent>
             </Popover>
