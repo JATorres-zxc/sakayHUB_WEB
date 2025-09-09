@@ -7,8 +7,11 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings, MapPin, Percent, AlertTriangle, Smartphone, Shield, Gift } from "lucide-react";
+import { CreatePromoModal } from "@/components/CreatePromoModal";
+import { useState } from "react";
 
 const System = () => {
+  const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
   const mockPromoCodes = [
     { id: "WELCOME20", type: "Discount", value: "20%", usage: "128/500", expiry: "2024-03-15", status: "active" },
     { id: "FIRSTRIDE", type: "Free Ride", value: "$10", usage: "45/100", expiry: "2024-02-28", status: "active" },
@@ -186,7 +189,7 @@ const System = () => {
                   </CardTitle>
                   <CardDescription>Manage promotional campaigns and referral bonuses</CardDescription>
                 </div>
-                <Button>Create New Promo</Button>
+                <Button onClick={() => setIsPromoModalOpen(true)}>Create New Promo</Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -327,6 +330,11 @@ const System = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <CreatePromoModal 
+        open={isPromoModalOpen} 
+        onOpenChange={setIsPromoModalOpen} 
+      />
     </div>
   );
 };
