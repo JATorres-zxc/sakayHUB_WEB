@@ -193,7 +193,7 @@ export default function Users() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Users ({filteredUsers.length})</CardTitle>
+          <CardTitle>All Users ({count})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading && <div className="text-sm text-muted-foreground">Loading users...</div>}
@@ -212,7 +212,13 @@ export default function Users() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user) => (
+              {filteredUsers.length === 0 && searchTerm.trim().length > 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground">
+                    No user with "{searchTerm}"
+                  </TableCell>
+                </TableRow>
+              ) : filteredUsers.map((user) => (
                 <TableRow key={user.id} className="hover:bg-muted/50">
                   <TableCell>
                     <div>

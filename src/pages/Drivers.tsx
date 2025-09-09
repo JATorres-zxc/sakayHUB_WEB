@@ -71,6 +71,13 @@ type UiDriver = {
   lastActive: string
 }
 
+type DriverStats = {
+  online: number
+  verified: number
+  avg_rating: number
+  total_earnings: number
+}
+
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "active":
@@ -110,6 +117,7 @@ export default function Drivers() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(5);
   const [count, setCount] = useState(0);
+  const [stats, setStats] = useState<DriverStats | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -141,6 +149,27 @@ export default function Drivers() {
     fetchDrivers();
     return () => { ignore = true; controller.abort(); };
   }, [page, pageSize]);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`/api/drivers/stats/`, {
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error("Failed to load driver stats");
+        const data: DriverStats = await res.json();
+        if (!ignore) setStats(data);
+      } catch (e) {
+        // leave stats as null on error
+      }
+    };
+    fetchStats();
+    return () => { ignore = true; controller.abort(); };
+  }, []);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(count / pageSize)), [count, pageSize]);
 
@@ -192,7 +221,7 @@ export default function Drivers() {
               <Car className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Online Drivers</p>
-                <p className="text-2xl font-bold">156</p>
+                <p className="text-2xl font-bold">{stats ? stats.online : "-"}</p>
               </div>
             </div>
           </CardContent>
@@ -203,7 +232,7 @@ export default function Drivers() {
               <CheckCircle className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Verified</p>
-                <p className="text-2xl font-bold">1,234</p>
+                <p className="text-2xl font-bold">{stats ? stats.verified : "-"}</p>
               </div>
             </div>
           </CardContent>
@@ -214,7 +243,7 @@ export default function Drivers() {
               <Star className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Avg Rating</p>
-                <p className="text-2xl font-bold">4.7</p>
+                <p className="text-2xl font-bold">{stats ? stats.avg_rating.toFixed(1) : "-"}</p>
               </div>
             </div>
           </CardContent>
@@ -225,7 +254,7 @@ export default function Drivers() {
               <DollarSign className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Total Earnings</p>
-                <p className="text-2xl font-bold">$45.2K</p>
+                <p className="text-2xl font-bold">{stats ? `$${stats.total_earnings.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "-"}</p>
               </div>
             </div>
           </CardContent>
@@ -256,7 +285,7 @@ export default function Drivers() {
       {/* Drivers Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Drivers ({filteredDrivers.length})</CardTitle>
+          <CardTitle>All Drivers ({count})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading && <div className="text-sm text-muted-foreground">Loading drivers...</div>}
@@ -277,7 +306,13 @@ export default function Drivers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDrivers.map((driver) => (
+              {filteredDrivers.length === 0 && searchTerm.trim().length > 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-sm text-muted-foreground">
+                    No driver with "{searchTerm}"
+                  </TableCell>
+                </TableRow>
+              ) : filteredDrivers.map((driver) => (
                 <TableRow key={driver.id} className="hover:bg-muted/50">
                   <TableCell>
                     <div className="flex items-center gap-2">
