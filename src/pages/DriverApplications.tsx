@@ -103,14 +103,14 @@ export default function DriverApplications() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex justify-between items-center">
+      {/* <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Driver Applications</h2>
           <p className="text-muted-foreground">
             Review and verify new driver applications
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -194,7 +194,13 @@ export default function DriverApplications() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredApplications.map((application) => (
+              {filteredApplications.length === 0 && searchTerm.trim().length > 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
+                    No driver applicant with "{searchTerm}"
+                  </TableCell>
+                </TableRow>
+              ) : filteredApplications.map((application) => (
                 <TableRow key={application.id} className="hover:bg-muted/50">
                   <TableCell>
                     <div>
