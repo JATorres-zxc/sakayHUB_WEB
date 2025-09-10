@@ -7,7 +7,8 @@ import { ThemeProvider } from "next-themes";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { UniversalToastProvider } from "@/components/ui/universal-toast";
 import Dashboard from "./pages/Dashboard";
-import UserManagement from "./pages/UserManagement";
+import Users from "./pages/Users";
+import Drivers from "./pages/Drivers";
 import RidesDeliveries from "./pages/operations/RidesDeliveries";
 import Financial from "./pages/operations/Financial";
 import Support from "./pages/operations/Support";
@@ -54,7 +55,14 @@ const App = () => (
                 <Route path="/users" element={
                   <RequireAuth>
                     <DashboardLayout>
-                      <UserManagement />
+                      <Users />
+                    </DashboardLayout>
+                  </RequireAuth>
+                } />
+                <Route path="/drivers" element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Drivers />
                     </DashboardLayout>
                   </RequireAuth>
                 } />
