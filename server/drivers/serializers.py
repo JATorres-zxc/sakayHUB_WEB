@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Driver
+from .models import Driver, DriverApplication
 
 
 class DriverSerializer(serializers.ModelSerializer):
@@ -20,6 +20,21 @@ class DriverSerializer(serializers.ModelSerializer):
             "online",
             "join_date",
             "last_active",
+        ]
+
+
+class DriverApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DriverApplication
+        fields = [
+            "id",
+            "name",
+            "email",
+            "phone",
+            "applied_at",
+            "vehicle_type",
+            "license_number",
+            "status",
         ]
 
     def validate_earnings(self, value):

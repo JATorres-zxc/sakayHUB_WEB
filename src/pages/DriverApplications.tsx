@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,14 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { 
   Search, 
   FileCheck, 
@@ -20,52 +28,35 @@ import {
 } from "lucide-react";
 import { DriverVerificationModal } from "@/components/DriverVerificationModal";
 
-const driverApplications = [
-  {
-    id: 1,
-    name: "Carlos Martinez",
-    email: "carlos.martinez@example.com",
-    phone: "+1 234 567 8901",
-    appliedDate: "2024-03-22",
-    appliedTime: "10:30 AM",
-    vehicleType: "sedan",
-    licenseNumber: "DL123456789",
-    status: "pending"
-  },
-  {
-    id: 2,
-    name: "Anna Kim",
-    email: "anna.kim@example.com",
-    phone: "+1 234 567 8902",
-    appliedDate: "2024-03-21",
-    appliedTime: "2:15 PM",
-    vehicleType: "suv",
-    licenseNumber: "DL987654321",
-    status: "pending"
-  },
-  {
-    id: 3,
-    name: "Michael Brown",
-    email: "michael.brown@example.com",
-    phone: "+1 234 567 8903",
-    appliedDate: "2024-03-20",
-    appliedTime: "4:45 PM",
-    vehicleType: "motorcycle",
-    licenseNumber: "DL456789123",
-    status: "under_review"
-  },
-  {
-    id: 4,
-    name: "Sophie Chen",
-    email: "sophie.chen@example.com",
-    phone: "+1 234 567 8904",
-    appliedDate: "2024-03-19",
-    appliedTime: "11:20 AM",
-    vehicleType: "van",
-    licenseNumber: "DL789123456",
-    status: "pending"
-  },
-];
+type ApiApplication = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  applied_at: string
+  vehicle_type: string
+  license_number: string
+  status: string
+}
+
+type UiApplication = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  appliedDate: string
+  appliedTime: string
+  vehicleType: string
+  licenseNumber: string
+  status: string
+}
+
+type AppStats = {
+  pending: number
+  under_review: number
+  approved_today: number
+  total_month: number
+}
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -85,6 +76,83 @@ const getStatusBadge = (status: string) => {
 export default function DriverApplications() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
+  const [apiApps, setApiApps] = useState<ApiApplication[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(5);
+  const [count, setCount] = useState(0);
+  const [stats, setStats] = useState<AppStats | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchApps = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+        const res = await fetch(`/api/drivers/applications/?${params.toString()}`, {
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Failed to load applications: ${res.status}`);
+        const data: { count: number; next: string | null; previous: string | null; results: ApiApplication[] } = await res.json();
+        if (!ignore) {
+          setApiApps(data.results);
+          setCount(data.count);
+        }
+      } catch (e: any) {
+        if (!ignore) setError(e?.message ?? "Unknown error");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    fetchApps();
+    return () => { ignore = true; controller.abort(); };
+  }, [page, pageSize]);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`/api/drivers/applications/stats/`, {
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error("Failed to load application stats");
+        const data: AppStats = await res.json();
+        if (!ignore) setStats(data);
+      } catch (e) {
+        // ignore
+      }
+    };
+    fetchStats();
+    return () => { ignore = true; controller.abort(); };
+  }, []);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(count / pageSize)), [count, pageSize]);
+
+  const driverApplications: UiApplication[] = useMemo(() => {
+    if (!apiApps) return [];
+    return apiApps.map(a => {
+      const d = new Date(a.applied_at);
+      return {
+        id: a.id,
+        name: a.name,
+        email: a.email,
+        phone: a.phone,
+        appliedDate: d.toISOString().slice(0,10),
+        appliedTime: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        vehicleType: a.vehicle_type,
+        licenseNumber: a.license_number,
+        status: a.status,
+      };
+    });
+  }, [apiApps]);
 
   const filteredApplications = driverApplications.filter(application => 
     application.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,16 +170,6 @@ export default function DriverApplications() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      {/* <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Driver Applications</h2>
-          <p className="text-muted-foreground">
-            Review and verify new driver applications
-          </p>
-        </div>
-      </div> */}
-
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -120,7 +178,7 @@ export default function DriverApplications() {
               <Clock className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Pending</p>
-                <p className="text-2xl font-bold">12</p>
+                <p className="text-2xl font-bold">{stats ? stats.pending : "-"}</p>
               </div>
             </div>
           </CardContent>
@@ -131,7 +189,7 @@ export default function DriverApplications() {
               <FileCheck className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Under Review</p>
-                <p className="text-2xl font-bold">8</p>
+                <p className="text-2xl font-bold">{stats ? stats.under_review : "-"}</p>
               </div>
             </div>
           </CardContent>
@@ -142,7 +200,7 @@ export default function DriverApplications() {
               <User className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Approved Today</p>
-                <p className="text-2xl font-bold">5</p>
+                <p className="text-2xl font-bold">{stats ? stats.approved_today : "-"}</p>
               </div>
             </div>
           </CardContent>
@@ -153,7 +211,7 @@ export default function DriverApplications() {
               <MessageSquare className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Total This Month</p>
-                <p className="text-2xl font-bold">47</p>
+                <p className="text-2xl font-bold">{stats ? stats.total_month : "-"}</p>
               </div>
             </div>
           </CardContent>
@@ -181,6 +239,8 @@ export default function DriverApplications() {
           <CardTitle>Driver Applications ({filteredApplications.length})</CardTitle>
         </CardHeader>
         <CardContent>
+          {loading && <div className="text-sm text-muted-foreground">Loading applications...</div>}
+          {error && <div className="text-sm text-destructive">{error}</div>}
           <Table>
             <TableHeader>
               <TableRow>
@@ -259,6 +319,35 @@ export default function DriverApplications() {
               ))}
             </TableBody>
           </Table>
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2)).map((p) => (
+                  <PaginationItem key={p}>
+                    <PaginationLink
+                      href="#"
+                      isActive={p === page}
+                      onClick={(e) => { e.preventDefault(); setPage(p); }}
+                    >
+                      {p}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </CardContent>
       </Card>
 
