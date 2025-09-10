@@ -19,4 +19,10 @@ class UserSerializer(serializers.ModelSerializer):
             "last_active",
         ]
 
+    def validate_total_spent(self, value):
+        """Validate that total_spent is not negative."""
+        if value < 0:
+            raise serializers.ValidationError("Total spent cannot be negative.")
+        return value
+
 

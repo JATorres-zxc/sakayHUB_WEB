@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
 class Driver(models.Model):
@@ -26,7 +27,7 @@ class Driver(models.Model):
     license_status = models.CharField(max_length=12, choices=LICENSE_CHOICES)
     rating = models.FloatField(default=0)
     total_rides = models.PositiveIntegerField(default=0)
-    earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     online = models.BooleanField(default=False)
     join_date = models.DateField()
     last_active = models.DateTimeField()
