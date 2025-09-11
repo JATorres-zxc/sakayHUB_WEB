@@ -5,7 +5,6 @@ class User(models.Model):
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('suspended', 'Suspended'),
-        ('inactive', 'Inactive'),
     ]
     KYC_CHOICES = [
         ('verified', 'Verified'),

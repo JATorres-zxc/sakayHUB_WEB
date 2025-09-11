@@ -23,6 +23,23 @@ class DriverSerializer(serializers.ModelSerializer):
         ]
 
 
+class DriverStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Driver
+        fields = [
+            "status",
+        ]
+        extra_kwargs = {
+            "status": {"required": True},
+        }
+
+    def validate_status(self, value):
+        valid_values = [choice[0] for choice in Driver.STATUS_CHOICES]
+        if value not in valid_values:
+            raise serializers.ValidationError("Invalid status value.")
+        return value
+
+
 class DriverApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DriverApplication

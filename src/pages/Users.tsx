@@ -49,6 +49,7 @@ import {
   PaginationPrevious,
   PaginationLink,
 } from "@/components/ui/pagination";
+import { useToast } from "@/lib/toast";
 
 type ApiUser = {
   id: number
@@ -114,6 +115,7 @@ export default function Users() {
   const [kycFilters, setKycFilters] = useState<string[]>([]);
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const { success, error: toastError } = useToast();
 
   useEffect(() => {
     let ignore = false;
@@ -203,9 +205,58 @@ export default function Users() {
     setSuspendModalOpen(true);
   };
 
-  const handleSuspendConfirm = () => {
-    // Here you would typically make an API call to suspend/unsuspend the user
-    console.log(`${selectedUser?.status === 'suspended' ? 'Unsuspending' : 'Suspending'} user:`, selectedUser?.name);
+  const handleSuspendConfirm = async () => {
+    if (!selectedUser) return;
+    const action = selectedUser.status === "suspended" ? "unsuspend" : "suspend";
+
+    try {
+      // Ensure CSRF token
+      let csrftoken = "";
+      try {
+        const csrfResp = await fetch("/api/users/csrf/", {
+          method: "GET",
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+        });
+        const csrfData = await csrfResp.json().catch(() => ({} as any));
+        csrftoken = (csrfData as any)?.csrftoken || "";
+      } catch {}
+
+      const resp = await fetch(`/api/users/${selectedUser.id}/${action}/`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "Accept": "application/json",
+        },
+      });
+
+      if (!resp.ok) {
+        let detail = `${action === "suspend" ? "Suspend" : "Unsuspend"} failed`;
+        try {
+          const data = await resp.json();
+          if (data?.detail) detail = data.detail;
+        } catch {}
+        toastError("Action failed", detail);
+        return;
+      }
+
+      const updated = await resp.json();
+      setApiUsers((prev) =>
+        Array.isArray(prev)
+          ? prev.map((u) => (u.id === updated.id ? updated : u))
+          : prev
+      );
+
+      success(
+        action === "suspend" ? "User suspended" : "User unsuspended",
+        `${updated.name} is now ${updated.status}.`
+      );
+      setSuspendModalOpen(false);
+      setSelectedUser(null);
+    } catch (e: any) {
+      toastError("Network error", e?.message || "Please try again");
+    }
   };
 
   return (

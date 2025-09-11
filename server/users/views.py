@@ -122,3 +122,29 @@ def update_user_status(request, user_id: int):
         # Return the full user payload for frontend convenience
         return Response(UserSerializer(user).data, status=drf_status.HTTP_200_OK)
     return Response(serializer.errors, status=drf_status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def suspend_user(request, user_id: int):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({"detail": "User not found"}, status=drf_status.HTTP_404_NOT_FOUND)
+
+    user.status = "suspended"
+    user.save(update_fields=["status"])
+    return Response(UserSerializer(user).data, status=drf_status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def unsuspend_user(request, user_id: int):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({"detail": "User not found"}, status=drf_status.HTTP_404_NOT_FOUND)
+
+    user.status = "active"
+    user.save(update_fields=["status"])
+    return Response(UserSerializer(user).data, status=drf_status.HTTP_200_OK)

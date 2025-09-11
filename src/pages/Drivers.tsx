@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DriverApplications from "./DriverApplications";
+import { useToast } from "@/lib/toast";
 
 type ApiDriver = {
   id: number
@@ -140,6 +141,7 @@ export default function Drivers() {
   const [licenseFilters, setLicenseFilters] = useState<string[]>([]);
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
+  const { success, error: toastError } = useToast();
 
   useEffect(() => {
     let ignore = false;
@@ -274,9 +276,58 @@ export default function Drivers() {
     setSuspendModalOpen(true);
   };
 
-  const handleSuspendConfirm = () => {
-    // Here you would typically make an API call to suspend/unsuspend the driver
-    console.log(`${selectedDriver?.status === 'suspended' ? 'Unsuspending' : 'Suspending'} driver:`, selectedDriver?.name);
+  const handleSuspendConfirm = async () => {
+    if (!selectedDriver) return;
+    const action = selectedDriver.status === "suspended" ? "unsuspend" : "suspend";
+
+    try {
+      // Ensure CSRF token (users app provides the endpoint)
+      let csrftoken = "";
+      try {
+        const csrfResp = await fetch("/api/users/csrf/", {
+          method: "GET",
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+        });
+        const csrfData = await csrfResp.json().catch(() => ({} as any));
+        csrftoken = (csrfData as any)?.csrftoken || "";
+      } catch {}
+
+      const resp = await fetch(`/api/drivers/${selectedDriver.id}/${action}/`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "Accept": "application/json",
+        },
+      });
+
+      if (!resp.ok) {
+        let detail = `${action === "suspend" ? "Suspend" : "Unsuspend"} failed`;
+        try {
+          const data = await resp.json();
+          if ((data as any)?.detail) detail = (data as any).detail;
+        } catch {}
+        toastError("Action failed", detail);
+        return;
+      }
+
+      const updated = await resp.json();
+      setApiDrivers((prev) =>
+        Array.isArray(prev)
+          ? prev.map((d) => (d.id === updated.id ? updated : d))
+          : prev
+      );
+
+      success(
+        action === "suspend" ? "Driver suspended" : "Driver unsuspended",
+        `${updated.name} is now ${updated.status}.`
+      );
+      setSuspendModalOpen(false);
+      setSelectedDriver(null);
+    } catch (e: any) {
+      toastError("Network error", e?.message || "Please try again");
+    }
   };
 
   return (

@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Driver, DriverApplication
-from .serializers import DriverSerializer, DriverApplicationSerializer
+from .serializers import DriverSerializer, DriverApplicationSerializer, DriverStatusUpdateSerializer
 from .pagination import DriverPagination
 from django.db.models import Count, Avg, Sum, Q
 from django.utils import timezone
@@ -67,3 +67,44 @@ def driver_application_stats(request):
         "approved_today": approved_today_count,
         "total_month": total_month_count,
     })
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def update_driver_status(request, driver_id: int):
+    try:
+        driver = Driver.objects.get(id=driver_id)
+    except Driver.DoesNotExist:
+        return Response({"detail": "Driver not found"}, status=404)
+
+    serializer = DriverStatusUpdateSerializer(instance=driver, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(DriverSerializer(driver).data)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def suspend_driver(request, driver_id: int):
+    try:
+        driver = Driver.objects.get(id=driver_id)
+    except Driver.DoesNotExist:
+        return Response({"detail": "Driver not found"}, status=404)
+
+    driver.status = "suspended"
+    driver.save(update_fields=["status"])
+    return Response(DriverSerializer(driver).data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def unsuspend_driver(request, driver_id: int):
+    try:
+        driver = Driver.objects.get(id=driver_id)
+    except Driver.DoesNotExist:
+        return Response({"detail": "Driver not found"}, status=404)
+
+    driver.status = "active"
+    driver.save(update_fields=["status"])
+    return Response(DriverSerializer(driver).data)
