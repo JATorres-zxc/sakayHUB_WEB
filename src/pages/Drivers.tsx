@@ -23,6 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import SuspendConfirmModal from "@/components/SuspendConfirmModal";
 import { 
   Search, 
   Filter, 
@@ -34,7 +35,8 @@ import {
   CheckCircle,
   Car,
   DollarSign,
-  Star
+  Star,
+  RotateCcw
 } from "lucide-react";
 import { 
   Pagination,
@@ -136,6 +138,8 @@ export default function Drivers() {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [vehicleFilters, setVehicleFilters] = useState<string[]>([]);
   const [licenseFilters, setLicenseFilters] = useState<string[]>([]);
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [selectedDriver, setSelectedDriver] = useState<any>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -264,6 +268,16 @@ export default function Drivers() {
 
   const hasActiveFilters = onlineFilters.length > 0 || statusFilters.length > 0 || 
                           vehicleFilters.length > 0 || licenseFilters.length > 0;
+
+  const handleSuspendClick = (driver: any) => {
+    setSelectedDriver(driver);
+    setSuspendModalOpen(true);
+  };
+
+  const handleSuspendConfirm = () => {
+    // Here you would typically make an API call to suspend/unsuspend the driver
+    console.log(`${selectedDriver?.status === 'suspended' ? 'Unsuspending' : 'Suspending'} driver:`, selectedDriver?.name);
+  };
 
   return (
     <div className="space-y-6">
@@ -565,55 +579,76 @@ export default function Drivers() {
                               <CheckCircle className="w-4 h-4" />
                               Verify License
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2 text-destructive">
-                              <Ban className="w-4 h-4" />
-                              Suspend Driver
+                            <DropdownMenuItem 
+                              className={`gap-2 ${driver.status === 'suspended' ? '' : 'text-destructive'}`}
+                              onClick={() => handleSuspendClick(driver)}
+                            >
+                              {driver.status === 'suspended' ? (
+                                <>
+                                  <RotateCcw className="w-4 h-4" />
+                                  Unsuspend Driver
+                                </>
+                              ) : (
+                                <>
+                                  <Ban className="w-4 h-4" />
+                                  Suspend Driver
+                                </>
+                              )}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-              <div className="mt-4">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        href="#"
-                        onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2)).map((p) => (
-                      <PaginationItem key={p}>
-                        <PaginationLink
-                          href="#"
-                          isActive={p === page}
-                          onClick={(e) => { e.preventDefault(); setPage(p); }}
-                        >
-                          {p}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        href="#"
-                        onClick={(e) => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2)).map((p) => (
+                  <PaginationItem key={p}>
+                    <PaginationLink
+                      href="#"
+                      isActive={p === page}
+                      onClick={(e) => { e.preventDefault(); setPage(p); }}
+                    >
+                      {p}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        </CardContent>
+      </Card>
+    </TabsContent>
 
-        <TabsContent value="applications" className="space-y-0">
-          <DriverApplications />
-        </TabsContent>
-      </Tabs>
+    <TabsContent value="applications" className="space-y-0">
+      <DriverApplications />
+    </TabsContent>
+  </Tabs>
+
+  <SuspendConfirmModal
+    isOpen={suspendModalOpen}
+    onClose={() => setSuspendModalOpen(false)}
+    type="driver"
+    action={selectedDriver?.status === 'suspended' ? 'unsuspend' : 'suspend'}
+    name={selectedDriver?.name || ''}
+    onConfirm={handleSuspendConfirm}
+  />
     </div>
   );
 }
