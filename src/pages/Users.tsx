@@ -23,6 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import SuspendConfirmModal from "@/components/SuspendConfirmModal";
 import { 
   Search, 
   Filter, 
@@ -31,7 +32,8 @@ import {
   Eye,
   Edit,
   Ban,
-  CheckCircle
+  CheckCircle,
+  RotateCcw
 } from "lucide-react";
 
 const users = [
@@ -127,6 +129,8 @@ export default function Users() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [kycFilters, setKycFilters] = useState<string[]>([]);
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -159,6 +163,16 @@ export default function Users() {
   };
 
   const hasActiveFilters = statusFilters.length > 0 || kycFilters.length > 0;
+
+  const handleSuspendClick = (user: any) => {
+    setSelectedUser(user);
+    setSuspendModalOpen(true);
+  };
+
+  const handleSuspendConfirm = () => {
+    // Here you would typically make an API call to suspend/unsuspend the user
+    console.log(`${selectedUser?.status === 'suspended' ? 'Unsuspending' : 'Suspending'} user:`, selectedUser?.name);
+  };
 
   return (
     <div className="space-y-6">
@@ -342,9 +356,21 @@ export default function Users() {
                           <CheckCircle className="w-4 h-4" />
                           Verify KYC
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 text-destructive">
-                          <Ban className="w-4 h-4" />
-                          Suspend User
+                        <DropdownMenuItem 
+                          className={`gap-2 ${user.status === 'suspended' ? '' : 'text-destructive'}`}
+                          onClick={() => handleSuspendClick(user)}
+                        >
+                          {user.status === 'suspended' ? (
+                            <>
+                              <RotateCcw className="w-4 h-4" />
+                              Unsuspend User
+                            </>
+                          ) : (
+                            <>
+                              <Ban className="w-4 h-4" />
+                              Suspend User
+                            </>
+                          )}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -355,6 +381,15 @@ export default function Users() {
           </Table>
         </CardContent>
       </Card>
+
+      <SuspendConfirmModal
+        isOpen={suspendModalOpen}
+        onClose={() => setSuspendModalOpen(false)}
+        type="user"
+        action={selectedUser?.status === 'suspended' ? 'unsuspend' : 'suspend'}
+        name={selectedUser?.name || ''}
+        onConfirm={handleSuspendConfirm}
+      />
     </div>
   );
 }

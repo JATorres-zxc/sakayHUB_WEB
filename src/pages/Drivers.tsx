@@ -23,6 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import SuspendConfirmModal from "@/components/SuspendConfirmModal";
 import { 
   Search, 
   Filter, 
@@ -34,7 +35,8 @@ import {
   CheckCircle,
   Car,
   DollarSign,
-  Star
+  Star,
+  RotateCcw
 } from "lucide-react";
 
 const drivers = [
@@ -152,6 +154,8 @@ export default function Drivers() {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [vehicleFilters, setVehicleFilters] = useState<string[]>([]);
   const [licenseFilters, setLicenseFilters] = useState<string[]>([]);
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [selectedDriver, setSelectedDriver] = useState<any>(null);
 
   const filteredDrivers = drivers.filter(driver => {
     const matchesSearch = driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -207,6 +211,16 @@ export default function Drivers() {
 
   const hasActiveFilters = onlineFilters.length > 0 || statusFilters.length > 0 || 
                           vehicleFilters.length > 0 || licenseFilters.length > 0;
+
+  const handleSuspendClick = (driver: any) => {
+    setSelectedDriver(driver);
+    setSuspendModalOpen(true);
+  };
+
+  const handleSuspendConfirm = () => {
+    // Here you would typically make an API call to suspend/unsuspend the driver
+    console.log(`${selectedDriver?.status === 'suspended' ? 'Unsuspending' : 'Suspending'} driver:`, selectedDriver?.name);
+  };
 
   return (
     <div className="space-y-6">
@@ -501,9 +515,21 @@ export default function Drivers() {
                           <CheckCircle className="w-4 h-4" />
                           Verify License
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 text-destructive">
-                          <Ban className="w-4 h-4" />
-                          Suspend Driver
+                        <DropdownMenuItem 
+                          className={`gap-2 ${driver.status === 'suspended' ? '' : 'text-destructive'}`}
+                          onClick={() => handleSuspendClick(driver)}
+                        >
+                          {driver.status === 'suspended' ? (
+                            <>
+                              <RotateCcw className="w-4 h-4" />
+                              Unsuspend Driver
+                            </>
+                          ) : (
+                            <>
+                              <Ban className="w-4 h-4" />
+                              Suspend Driver
+                            </>
+                          )}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -514,6 +540,15 @@ export default function Drivers() {
           </Table>
         </CardContent>
       </Card>
+
+      <SuspendConfirmModal
+        isOpen={suspendModalOpen}
+        onClose={() => setSuspendModalOpen(false)}
+        type="driver"
+        action={selectedDriver?.status === 'suspended' ? 'unsuspend' : 'suspend'}
+        name={selectedDriver?.name || ''}
+        onConfirm={handleSuspendConfirm}
+      />
     </div>
   );
 }
