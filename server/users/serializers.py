@@ -26,3 +26,19 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
 
+class UserStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "status",
+        ]
+        extra_kwargs = {
+            "status": {"required": True},
+        }
+
+    def validate_status(self, value):
+        valid_values = [choice[0] for choice in User.STATUS_CHOICES]
+        if value not in valid_values:
+            raise serializers.ValidationError("Invalid status value.")
+        return value
+

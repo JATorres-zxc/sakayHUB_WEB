@@ -7,9 +7,10 @@ from django.middleware.csrf import rotate_token, get_token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status as drf_status
 
 from .models import User
-from .serializers import UserSerializer
+from .serializers import UserSerializer, UserStatusUpdateSerializer
 from .pagination import UserPagination
 
 
@@ -105,3 +106,19 @@ def list_users(request):
     page = paginator.paginate_queryset(queryset, request)
     serializer = UserSerializer(page, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def update_user_status(request, user_id: int):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({"detail": "User not found"}, status=drf_status.HTTP_404_NOT_FOUND)
+
+    serializer = UserStatusUpdateSerializer(instance=user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        # Return the full user payload for frontend convenience
+        return Response(UserSerializer(user).data, status=drf_status.HTTP_200_OK)
+    return Response(serializer.errors, status=drf_status.HTTP_400_BAD_REQUEST)
