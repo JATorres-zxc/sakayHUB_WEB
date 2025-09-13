@@ -23,7 +23,7 @@ class Driver(models.Model):
     ]
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20)
+    phone = models.CharField(max_length=20, unique=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
     vehicle_type = models.CharField(max_length=20, choices=VEHICLE_CHOICES)
     license_status = models.CharField(max_length=12, choices=LICENSE_CHOICES)

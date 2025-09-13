@@ -15,7 +15,7 @@ class User(models.Model):
     ]
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=20)
+    phone = models.CharField(max_length=20, unique=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
     kyc_status = models.CharField(max_length=10, choices=KYC_CHOICES)
     total_rides = models.PositiveIntegerField(default=0)
