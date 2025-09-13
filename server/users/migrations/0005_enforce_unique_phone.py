@@ -1,4 +1,4 @@
-cfrom django.db import migrations, models
+from django.db import migrations, models
 from django.db.models import Count
 
 
