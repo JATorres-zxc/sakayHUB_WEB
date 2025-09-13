@@ -151,6 +151,7 @@ export default function Drivers() {
         setLoading(true);
         setError(null);
         const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+        if (searchTerm.trim()) params.set("search", searchTerm.trim());
         const res = await fetch(`/api/drivers/list/?${params.toString()}`, {
           credentials: "include",
           headers: { "Accept": "application/json" },
@@ -172,7 +173,7 @@ export default function Drivers() {
     };
     fetchDrivers();
     return () => { ignore = true; controller.abort(); };
-  }, [page, pageSize]);
+  }, [page, pageSize, searchTerm]);
 
   useEffect(() => {
     let ignore = false;
@@ -217,16 +218,13 @@ export default function Drivers() {
   }, [apiDrivers]);
 
   const filteredDrivers = drivers.filter(driver => {
-    const matchesSearch = driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         driver.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesOnline = onlineFilters.length === 0 || 
                          (onlineFilters.includes("online") && driver.online) ||
                          (onlineFilters.includes("offline") && !driver.online);
     const matchesStatus = statusFilters.length === 0 || statusFilters.includes(driver.status);
     const matchesVehicle = vehicleFilters.length === 0 || vehicleFilters.includes(driver.vehicleType);
     const matchesLicense = licenseFilters.length === 0 || licenseFilters.includes(driver.licenseStatus);
-    
-    return matchesSearch && matchesOnline && matchesStatus && matchesVehicle && matchesLicense;
+    return matchesOnline && matchesStatus && matchesVehicle && matchesLicense;
   });
 
   const toggleOnlineFilter = (online: string) => {

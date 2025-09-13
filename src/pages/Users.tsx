@@ -125,6 +125,7 @@ export default function Users() {
         setLoading(true);
         setError(null);
         const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+        if (searchTerm.trim()) params.set("search", searchTerm.trim());
         const res = await fetch(`/api/users/list/?${params.toString()}`, {
           credentials: "include",
           headers: {
@@ -148,7 +149,7 @@ export default function Users() {
     };
     fetchUsers();
     return () => { ignore = true; controller.abort(); };
-  }, [page, pageSize]);
+  }, [page, pageSize, searchTerm]);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(count / pageSize)), [count, pageSize]);
 
@@ -169,12 +170,9 @@ export default function Users() {
   }, [apiUsers]);
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilters.length === 0 || statusFilters.includes(user.status);
     const matchesKyc = kycFilters.length === 0 || kycFilters.includes(user.kycStatus);
-    
-    return matchesSearch && matchesStatus && matchesKyc;
+    return matchesStatus && matchesKyc;
   });
 
   const toggleStatusFilter = (status: string) => {

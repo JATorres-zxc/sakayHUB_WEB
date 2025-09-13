@@ -12,6 +12,7 @@ from rest_framework import status as drf_status
 from .models import User
 from .serializers import UserSerializer, UserStatusUpdateSerializer
 from .pagination import UserPagination
+from django.db.models import Q
 
 
 MAX_FAILED_LOGINS = 5
@@ -102,6 +103,14 @@ def me(request):
 def list_users(request):
     # CRM users are separate from auth users; list business users from our User model
     queryset = User.objects.all().order_by("id")
+    # Server-side search across the full dataset then paginate
+    search = request.GET.get("search", "").strip()
+    if search:
+        queryset = queryset.filter(
+            Q(name__icontains=search)
+            | Q(email__icontains=search)
+            | Q(phone__icontains=search)
+        )
     paginator = UserPagination()
     page = paginator.paginate_queryset(queryset, request)
     serializer = UserSerializer(page, many=True)

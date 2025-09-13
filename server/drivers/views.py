@@ -13,6 +13,14 @@ from django.utils import timezone
 @permission_classes([IsAuthenticated])
 def list_drivers(request):
     queryset = Driver.objects.all().order_by("id")
+    # Server-side search across the full dataset then paginate
+    search = request.GET.get("search", "").strip()
+    if search:
+        queryset = queryset.filter(
+            Q(name__icontains=search)
+            | Q(email__icontains=search)
+            | Q(phone__icontains=search)
+        )
     paginator = DriverPagination()
     page = paginator.paginate_queryset(queryset, request)
     serializer = DriverSerializer(page, many=True)
