@@ -28,6 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+CORS_ALLOWED_ORIGINS=["https://sakayhub.vercel.app"]
 # Application definition
 
 INSTALLED_APPS = [
