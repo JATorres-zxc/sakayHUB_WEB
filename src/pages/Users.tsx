@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import SuspendConfirmModal from "@/components/SuspendConfirmModal";
 import { 
   Search, 
@@ -35,69 +41,41 @@ import {
   CheckCircle,
   RotateCcw
 } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationLink,
+} from "@/components/ui/pagination";
+import { useToast } from "@/lib/toast";
 
-const users = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 234 567 8901",
-    status: "active",
-    kycStatus: "verified",
-    totalRides: 45,
-    totalSpent: "$1,234.50",
-    joinDate: "2024-01-15",
-    lastActive: "2 hours ago"
-  },
-  {
-    id: 2,
-    name: "Sarah Wilson",
-    email: "sarah.wilson@example.com",
-    phone: "+1 234 567 8902",
-    status: "active",
-    kycStatus: "pending",
-    totalRides: 23,
-    totalSpent: "$567.80",
-    joinDate: "2024-02-20",
-    lastActive: "1 day ago"
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    email: "mike.johnson@example.com",
-    phone: "+1 234 567 8903",
-    status: "suspended",
-    kycStatus: "verified",
-    totalRides: 78,
-    totalSpent: "$2,345.20",
-    joinDate: "2023-11-10",
-    lastActive: "3 days ago"
-  },
-  {
-    id: 4,
-    name: "Emma Davis",
-    email: "emma.davis@example.com",
-    phone: "+1 234 567 8904",
-    status: "active",
-    kycStatus: "rejected",
-    totalRides: 12,
-    totalSpent: "$234.70",
-    joinDate: "2024-03-05",
-    lastActive: "5 hours ago"
-  },
-  {
-    id: 5,
-    name: "Alex Brown",
-    email: "alex.brown@example.com",
-    phone: "+1 234 567 8905",
-    status: "inactive",
-    kycStatus: "verified",
-    totalRides: 156,
-    totalSpent: "$4,567.90",
-    joinDate: "2023-08-22",
-    lastActive: "2 weeks ago"
-  },
-];
+type ApiUser = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  status: "active" | "suspended" | "inactive" | string
+  kyc_status: "verified" | "pending" | "rejected" | string
+  total_rides: number
+  total_spent: string | number
+  join_date: string
+  last_active: string
+}
+
+type UiUser = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  status: string
+  kycStatus: string
+  totalRides: number
+  totalSpent: string
+  joinDate: string
+  lastActive: string
+}
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -127,18 +105,74 @@ const getKycBadge = (status: string) => {
 
 export default function Users() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [apiUsers, setApiUsers] = useState<ApiUser[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(5);
+  const [count, setCount] = useState(0);
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [kycFilters, setKycFilters] = useState<string[]>([]);
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const { success, error: toastError } = useToast();
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+        if (searchTerm.trim()) params.set("search", searchTerm.trim());
+        const res = await fetch(`/api/users/list/?${params.toString()}`, {
+          credentials: "include",
+          headers: {
+            "Accept": "application/json",
+          },
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to load users: ${res.status}`);
+        }
+        const data: { count: number; next: string | null; previous: string | null; results: ApiUser[] } = await res.json();
+        if (!ignore) {
+          setApiUsers(data.results);
+          setCount(data.count);
+        }
+      } catch (e: any) {
+        if (!ignore) setError(e?.message ?? "Unknown error");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    fetchUsers();
+    return () => { ignore = true; controller.abort(); };
+  }, [page, pageSize, searchTerm]);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(count / pageSize)), [count, pageSize]);
+
+  const users: UiUser[] = useMemo(() => {
+    if (!apiUsers) return [];
+    return apiUsers.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      status: u.status,
+      kycStatus: u.kyc_status,
+      totalRides: u.total_rides,
+      totalSpent: typeof u.total_spent === "number" ? `$${u.total_spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : u.total_spent,
+      joinDate: new Date(u.join_date).toISOString().slice(0, 10),
+      lastActive: new Date(u.last_active).toLocaleString(),
+    }));
+  }, [apiUsers]);
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilters.length === 0 || statusFilters.includes(user.status);
     const matchesKyc = kycFilters.length === 0 || kycFilters.includes(user.kycStatus);
-    
-    return matchesSearch && matchesStatus && matchesKyc;
+    return matchesStatus && matchesKyc;
   });
 
   const toggleStatusFilter = (status: string) => {
@@ -169,9 +203,58 @@ export default function Users() {
     setSuspendModalOpen(true);
   };
 
-  const handleSuspendConfirm = () => {
-    // Here you would typically make an API call to suspend/unsuspend the user
-    console.log(`${selectedUser?.status === 'suspended' ? 'Unsuspending' : 'Suspending'} user:`, selectedUser?.name);
+  const handleSuspendConfirm = async () => {
+    if (!selectedUser) return;
+    const action = selectedUser.status === "suspended" ? "unsuspend" : "suspend";
+
+    try {
+      // Ensure CSRF token
+      let csrftoken = "";
+      try {
+        const csrfResp = await fetch("/api/users/csrf/", {
+          method: "GET",
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+        });
+        const csrfData = await csrfResp.json().catch(() => ({} as any));
+        csrftoken = (csrfData as any)?.csrftoken || "";
+      } catch {}
+
+      const resp = await fetch(`/api/users/${selectedUser.id}/${action}/`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "Accept": "application/json",
+        },
+      });
+
+      if (!resp.ok) {
+        let detail = `${action === "suspend" ? "Suspend" : "Unsuspend"} failed`;
+        try {
+          const data = await resp.json();
+          if (data?.detail) detail = data.detail;
+        } catch {}
+        toastError("Action failed", detail);
+        return;
+      }
+
+      const updated = await resp.json();
+      setApiUsers((prev) =>
+        Array.isArray(prev)
+          ? prev.map((u) => (u.id === updated.id ? updated : u))
+          : prev
+      );
+
+      success(
+        action === "suspend" ? "User suspended" : "User unsuspended",
+        `${updated.name} is now ${updated.status}.`
+      );
+      setSuspendModalOpen(false);
+      setSelectedUser(null);
+    } catch (e: any) {
+      toastError("Network error", e?.message || "Please try again");
+    }
   };
 
   return (
@@ -184,10 +267,10 @@ export default function Users() {
             Manage customer accounts and KYC verification
           </p>
         </div>
-        <Button className="gap-2">
+        {/* <Button className="gap-2">
           <Plus className="w-4 h-4" />
           Add User
-        </Button>
+        </Button> */}
       </div>
 
       {/* Search and Filters */}
@@ -215,14 +298,14 @@ export default function Users() {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="space-y-4">
+              <PopoverContent className="w-72 max-h-80 overflow-y-auto" align="end">
+                <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Filters</h4>
                     {hasActiveFilters && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={clearFilters}
                         className="text-muted-foreground"
                       >
@@ -230,50 +313,46 @@ export default function Users() {
                       </Button>
                     )}
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">Status</h5>
-                      <div className="space-y-2">
-                        {["active", "suspended", "inactive"].map((status) => (
-                          <div key={status} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`status-${status}`}
-                              checked={statusFilters.includes(status)}
-                              onCheckedChange={() => toggleStatusFilter(status)}
-                            />
-                            <label
-                              htmlFor={`status-${status}`}
-                              className="text-sm capitalize cursor-pointer"
-                            >
-                              {status}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">KYC Status</h5>
-                      <div className="space-y-2">
-                        {["verified", "pending", "rejected"].map((kyc) => (
-                          <div key={kyc} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`kyc-${kyc}`}
-                              checked={kycFilters.includes(kyc)}
-                              onCheckedChange={() => toggleKycFilter(kyc)}
-                            />
-                            <label
-                              htmlFor={`kyc-${kyc}`}
-                              className="text-sm capitalize cursor-pointer"
-                            >
-                              {kyc}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="status">
+                      <AccordionTrigger className="text-sm">Status</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2">
+                          {["active", "suspended", "inactive"].map((status) => (
+                            <div key={status} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`status-${status}`}
+                                checked={statusFilters.includes(status)}
+                                onCheckedChange={() => toggleStatusFilter(status)}
+                              />
+                              <label htmlFor={`status-${status}`} className="text-sm capitalize cursor-pointer">
+                                {status}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="kyc">
+                      <AccordionTrigger className="text-sm">KYC Status</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2">
+                          {["verified", "pending", "rejected"].map((kyc) => (
+                            <div key={kyc} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`kyc-${kyc}`}
+                                checked={kycFilters.includes(kyc)}
+                                onCheckedChange={() => toggleKycFilter(kyc)}
+                              />
+                              <label htmlFor={`kyc-${kyc}`} className="text-sm capitalize cursor-pointer">
+                                {kyc}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </PopoverContent>
             </Popover>
@@ -284,9 +363,11 @@ export default function Users() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Users ({filteredUsers.length})</CardTitle>
+          <CardTitle>All Users ({count})</CardTitle>
         </CardHeader>
         <CardContent>
+          {loading && <div className="text-sm text-muted-foreground">Loading users...</div>}
+          {error && <div className="text-sm text-destructive">{error}</div>}
           <Table>
             <TableHeader>
               <TableRow>
@@ -301,7 +382,13 @@ export default function Users() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user) => (
+              {filteredUsers.length === 0 && searchTerm.trim().length > 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground">
+                    No user with "{searchTerm}"
+                  </TableCell>
+                </TableRow>
+              ) : filteredUsers.map((user) => (
                 <TableRow key={user.id} className="hover:bg-muted/50">
                   <TableCell>
                     <div>
@@ -379,6 +466,37 @@ export default function Users() {
               ))}
             </TableBody>
           </Table>
+
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
+                  />
+                </PaginationItem>
+                {/* Simple numeric pages for first/last + current neighbors */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2)).map((p) => (
+                  <PaginationItem key={p}>
+                    <PaginationLink
+                      href="#"
+                      isActive={p === page}
+                      onClick={(e) => { e.preventDefault(); setPage(p); }}
+                    >
+                      {p}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </CardContent>
       </Card>
 

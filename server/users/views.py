@@ -4,6 +4,15 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.views.decorators.http import require_POST, require_GET
 from django.core.cache import cache
 from django.middleware.csrf import rotate_token, get_token
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status as drf_status
+
+from .models import User
+from .serializers import UserSerializer, UserStatusUpdateSerializer
+from .pagination import UserPagination
+from django.db.models import Q
 
 
 MAX_FAILED_LOGINS = 5
@@ -87,3 +96,64 @@ def me(request):
         "is_superuser": user.is_superuser,
         "email": user.email,
     })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_users(request):
+    # CRM users are separate from auth users; list business users from our User model
+    queryset = User.objects.all().order_by("id")
+    # Server-side search across the full dataset then paginate
+    search = request.GET.get("search", "").strip()
+    if search:
+        queryset = queryset.filter(
+            Q(name__icontains=search)
+            | Q(email__icontains=search)
+            | Q(phone__icontains=search)
+        )
+    paginator = UserPagination()
+    page = paginator.paginate_queryset(queryset, request)
+    serializer = UserSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def update_user_status(request, user_id: int):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({"detail": "User not found"}, status=drf_status.HTTP_404_NOT_FOUND)
+
+    serializer = UserStatusUpdateSerializer(instance=user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        # Return the full user payload for frontend convenience
+        return Response(UserSerializer(user).data, status=drf_status.HTTP_200_OK)
+    return Response(serializer.errors, status=drf_status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def suspend_user(request, user_id: int):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({"detail": "User not found"}, status=drf_status.HTTP_404_NOT_FOUND)
+
+    user.status = "suspended"
+    user.save(update_fields=["status"])
+    return Response(UserSerializer(user).data, status=drf_status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def unsuspend_user(request, user_id: int):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({"detail": "User not found"}, status=drf_status.HTTP_404_NOT_FOUND)
+
+    user.status = "active"
+    user.save(update_fields=["status"])
+    return Response(UserSerializer(user).data, status=drf_status.HTTP_200_OK)
