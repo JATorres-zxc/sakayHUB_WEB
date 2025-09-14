@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import apiClient from "@/lib/api";
 
 type AuthUser = {
   id: number;
@@ -25,8 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchCsrfToken = async (): Promise<string> => {
     try {
-      const res = await fetch("/api/users/csrf/", { credentials: "include" });
-      const data = await res.json();
+      const { data } = await apiClient.get("users/csrf/");
       return data?.csrftoken || "";
     } catch {
       return "";
@@ -35,20 +35,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      const res = await fetch("/api/users/me/", { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.isAuthenticated) {
-          setUser({
-            id: data.id,
-            username: data.username,
-            email: data.email,
-            is_staff: data.is_staff,
-            is_superuser: data.is_superuser,
-          });
-        } else {
-          setUser(null);
-        }
+      const { data } = await apiClient.get("users/me/");
+      if (data?.isAuthenticated) {
+        setUser({
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          is_staff: data.is_staff,
+          is_superuser: data.is_superuser,
+        });
       } else {
         setUser(null);
       }
@@ -66,17 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      // Ensure CSRF exists
       const csrftoken = await fetchCsrfToken();
-      // Logout
-      const res = await fetch("/api/users/logout/", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "X-CSRFToken": csrftoken,
-        },
-      });
-      if (!res.ok) return; // keep session if server rejected logout
+      await apiClient.post(
+        "users/logout/",
+        {},
+        { headers: { "X-CSRFToken": csrftoken } }
+      );
     } catch {
       // ignore
     } finally {

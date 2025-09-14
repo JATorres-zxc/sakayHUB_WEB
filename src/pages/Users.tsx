@@ -50,6 +50,7 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination";
 import { useToast } from "@/lib/toast";
+import apiClient from "@/lib/api";
 
 type ApiUser = {
   id: number
@@ -126,17 +127,10 @@ export default function Users() {
         setError(null);
         const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
         if (searchTerm.trim()) params.set("search", searchTerm.trim());
-        const res = await fetch(`/api/users/list/?${params.toString()}`, {
-          credentials: "include",
-          headers: {
-            "Accept": "application/json",
-          },
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          throw new Error(`Failed to load users: ${res.status}`);
-        }
-        const data: { count: number; next: string | null; previous: string | null; results: ApiUser[] } = await res.json();
+        const { data } = await apiClient.get<{ count: number; next: string | null; previous: string | null; results: ApiUser[] }>(
+          `users/list/?${params.toString()}`,
+          { signal: controller.signal as any }
+        );
         if (!ignore) {
           setApiUsers(data.results);
           setCount(data.count);
@@ -211,35 +205,15 @@ export default function Users() {
       // Ensure CSRF token
       let csrftoken = "";
       try {
-        const csrfResp = await fetch("/api/users/csrf/", {
-          method: "GET",
-          credentials: "include",
-          headers: { "Accept": "application/json" },
-        });
-        const csrfData = await csrfResp.json().catch(() => ({} as any));
+        const { data: csrfData } = await apiClient.get("users/csrf/");
         csrftoken = (csrfData as any)?.csrftoken || "";
       } catch {}
 
-      const resp = await fetch(`/api/users/${selectedUser.id}/${action}/`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "X-CSRFToken": csrftoken,
-          "Accept": "application/json",
-        },
-      });
-
-      if (!resp.ok) {
-        let detail = `${action === "suspend" ? "Suspend" : "Unsuspend"} failed`;
-        try {
-          const data = await resp.json();
-          if (data?.detail) detail = data.detail;
-        } catch {}
-        toastError("Action failed", detail);
-        return;
-      }
-
-      const updated = await resp.json();
+      const { data: updated } = await apiClient.post(
+        `users/${selectedUser.id}/${action}/`,
+        {},
+        { headers: { "X-CSRFToken": csrftoken } }
+      );
       setApiUsers((prev) =>
         Array.isArray(prev)
           ? prev.map((u) => (u.id === updated.id ? updated : u))

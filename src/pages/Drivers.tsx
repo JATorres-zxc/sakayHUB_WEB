@@ -55,6 +55,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DriverApplications from "./DriverApplications";
 import { useToast } from "@/lib/toast";
+import apiClient from "@/lib/api";
 
 type ApiDriver = {
   id: number
@@ -152,15 +153,10 @@ export default function Drivers() {
         setError(null);
         const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
         if (searchTerm.trim()) params.set("search", searchTerm.trim());
-        const res = await fetch(`/api/drivers/list/?${params.toString()}`, {
-          credentials: "include",
-          headers: { "Accept": "application/json" },
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          throw new Error(`Failed to load drivers: ${res.status}`);
-        }
-        const data: { count: number; next: string | null; previous: string | null; results: ApiDriver[] } = await res.json();
+        const { data } = await apiClient.get<{ count: number; next: string | null; previous: string | null; results: ApiDriver[] }>(
+          `drivers/list/?${params.toString()}`,
+          { signal: controller.signal as any }
+        );
         if (!ignore) {
           setApiDrivers(data.results);
           setCount(data.count);
@@ -180,13 +176,7 @@ export default function Drivers() {
     const controller = new AbortController();
     const fetchStats = async () => {
       try {
-        const res = await fetch(`/api/drivers/stats/`, {
-          credentials: "include",
-          headers: { "Accept": "application/json" },
-          signal: controller.signal,
-        });
-        if (!res.ok) throw new Error("Failed to load driver stats");
-        const data: DriverStats = await res.json();
+        const { data } = await apiClient.get<DriverStats>(`drivers/stats/`, { signal: controller.signal as any });
         if (!ignore) setStats(data);
       } catch (e) {
         // leave stats as null on error
@@ -282,35 +272,15 @@ export default function Drivers() {
       // Ensure CSRF token (users app provides the endpoint)
       let csrftoken = "";
       try {
-        const csrfResp = await fetch("/api/users/csrf/", {
-          method: "GET",
-          credentials: "include",
-          headers: { "Accept": "application/json" },
-        });
-        const csrfData = await csrfResp.json().catch(() => ({} as any));
+        const { data: csrfData } = await apiClient.get("users/csrf/");
         csrftoken = (csrfData as any)?.csrftoken || "";
       } catch {}
 
-      const resp = await fetch(`/api/drivers/${selectedDriver.id}/${action}/`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "X-CSRFToken": csrftoken,
-          "Accept": "application/json",
-        },
-      });
-
-      if (!resp.ok) {
-        let detail = `${action === "suspend" ? "Suspend" : "Unsuspend"} failed`;
-        try {
-          const data = await resp.json();
-          if ((data as any)?.detail) detail = (data as any).detail;
-        } catch {}
-        toastError("Action failed", detail);
-        return;
-      }
-
-      const updated = await resp.json();
+      const { data: updated } = await apiClient.post(
+        `drivers/${selectedDriver.id}/${action}/`,
+        {},
+        { headers: { "X-CSRFToken": csrftoken } }
+      );
       setApiDrivers((prev) =>
         Array.isArray(prev)
           ? prev.map((d) => (d.id === updated.id ? updated : d))

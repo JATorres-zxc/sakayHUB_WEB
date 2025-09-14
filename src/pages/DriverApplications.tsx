@@ -27,6 +27,7 @@ import {
   User
 } from "lucide-react";
 import { DriverVerificationModal } from "@/components/DriverVerificationModal";
+import apiClient from "@/lib/api";
 
 type ApiApplication = {
   id: number
@@ -75,7 +76,7 @@ const getStatusBadge = (status: string) => {
 
 export default function DriverApplications() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedApplication, setSelectedApplication] = useState<any>(null);
+  const [selectedApplication, setSelectedApplication] = useState<UiApplication | null>(null);
   const [apiApps, setApiApps] = useState<ApiApplication[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,19 +93,16 @@ export default function DriverApplications() {
         setLoading(true);
         setError(null);
         const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
-        const res = await fetch(`/api/drivers/applications/?${params.toString()}`, {
-          credentials: "include",
-          headers: { "Accept": "application/json" },
-          signal: controller.signal,
-        });
-        if (!res.ok) throw new Error(`Failed to load applications: ${res.status}`);
-        const data: { count: number; next: string | null; previous: string | null; results: ApiApplication[] } = await res.json();
+        const { data } = await apiClient.get<{ count: number; next: string | null; previous: string | null; results: ApiApplication[] }>(
+          `drivers/applications/?${params.toString()}`,
+          { signal: controller.signal as AbortSignal }
+        );
         if (!ignore) {
           setApiApps(data.results);
           setCount(data.count);
         }
-      } catch (e: any) {
-        if (!ignore) setError(e?.message ?? "Unknown error");
+      } catch (e) {
+        if (!ignore) setError(e instanceof Error ? e.message : "Unknown error");
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -118,13 +116,7 @@ export default function DriverApplications() {
     const controller = new AbortController();
     const fetchStats = async () => {
       try {
-        const res = await fetch(`/api/drivers/applications/stats/`, {
-          credentials: "include",
-          headers: { "Accept": "application/json" },
-          signal: controller.signal,
-        });
-        if (!res.ok) throw new Error("Failed to load application stats");
-        const data: AppStats = await res.json();
+        const { data } = await apiClient.get<AppStats>(`drivers/applications/stats/`, { signal: controller.signal as AbortSignal });
         if (!ignore) setStats(data);
       } catch (e) {
         // ignore
@@ -159,11 +151,11 @@ export default function DriverApplications() {
     application.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleVerify = (application: any) => {
+  const handleVerify = (application: UiApplication) => {
     setSelectedApplication(application);
   };
 
-  const handleSendMessage = (application: any) => {
+  const handleSendMessage = (application: UiApplication) => {
     // This would typically open a message composer
     console.log("Send message to:", application.name);
   };

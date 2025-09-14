@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn } from "lucide-react";
+import apiClient from "@/lib/api";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -22,45 +23,25 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // 1) Get CSRF token from server (cookie is HttpOnly)
-      const csrfResp = await fetch("/api/users/csrf/", {
-        method: "GET",
-        credentials: "include",
-      });
-      let csrftoken = "";
-      try {
-        const data = await csrfResp.json();
-        csrftoken = data?.csrftoken || "";
-      } catch {}
+      // 1) Get CSRF token
+      const { data: csrfData } = await apiClient.get("users/csrf/");
+      const csrftoken = csrfData?.csrftoken || "";
 
       // 2) Perform login using session auth
-      const response = await fetch("/api/users/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSRFToken": csrftoken,
-        },
-        credentials: "include",
-        body: new URLSearchParams({ username, password }).toString(),
-      });
-
-      if (!response.ok) {
-        let detail = "Login failed";
-        try {
-          const data = await response.json();
-          if (data?.detail) detail = data.detail;
-        } catch {
-          // ignore JSON parse errors
+      await apiClient.post(
+        "users/login/",
+        new URLSearchParams({ username, password }).toString(),
+        {
+          headers: { "Content-Type": "application/x-www-form-urlencoded", "X-CSRFToken": csrftoken },
         }
-        setError(detail);
-        return;
-      }
+      );
 
       // Refresh auth context so guards recognize authenticated state
       await refreshUser();
       navigate("/dashboard", { replace: true });
-    } catch (err) {
-      setError("Network error. Please try again.");
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || "Login failed";
+      setError(detail);
     } finally {
       setIsLoading(false);
     }

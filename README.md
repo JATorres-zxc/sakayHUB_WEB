@@ -1,3 +1,25 @@
+# SakayHUB Web
+
+## Deploying Frontend (Vercel) and Backend (Render)
+
+### Backend (Render)
+- Service URL: `https://sakayhub-web.onrender.com`
+- Ensure environment:
+  - `DJANGO_DEBUG=false`
+- Dependencies include `django-cors-headers` and are pinned in `server/requirements.txt`.
+
+### Frontend (Vercel)
+- Set Vercel Project Environment Variable:
+  - `VITE_API_BASE_URL=https://sakayhub-web.onrender.com/api`
+- Re-deploy.
+
+### Local Development
+- Vite dev server proxies `/api` to `http://localhost:8000` (see `vite.config.ts`).
+
+### CORS/CSRF
+- Server allows origin `https://sakayhub.vercel.app`, trusts it for CSRF, and allows credentials.
+- Cookies are `Secure` in production; session-based auth will work cross-site.
+
 # Welcome to your Lovable project
 
 ## Project info

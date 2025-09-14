@@ -22,8 +22,18 @@ import {
 } from "lucide-react";
 import { useToast } from "@/lib/toast";
 
+type DriverApplicationForModal = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  vehicleType: string;
+  licenseNumber: string;
+  status: string;
+};
+
 interface DriverVerificationModalProps {
-  application: any;
+  application: DriverApplicationForModal;
   isOpen: boolean;
   onClose: () => void;
 }
