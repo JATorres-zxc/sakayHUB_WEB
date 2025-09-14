@@ -55,7 +55,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DriverApplications from "./DriverApplications";
 import { useToast } from "@/lib/toast";
-import apiClient from "@/lib/api.ts";
+import apiClient from "@/lib/api";
 
 type ApiDriver = {
   id: number

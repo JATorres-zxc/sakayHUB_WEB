@@ -50,7 +50,7 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination";
 import { useToast } from "@/lib/toast";
-import apiClient from "@/lib/api.ts";
+import apiClient from "@/lib/api";
 
 type ApiUser = {
   id: number

@@ -27,7 +27,7 @@ import {
   User
 } from "lucide-react";
 import { DriverVerificationModal } from "@/components/DriverVerificationModal";
-import apiClient from "@/lib/api.ts";
+import apiClient from "@/lib/api";
 
 type ApiApplication = {
   id: number

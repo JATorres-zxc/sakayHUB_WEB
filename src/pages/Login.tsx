@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn } from "lucide-react";
-import apiClient from "@/lib/api.ts";
+import apiClient from "@/lib/api";
+import { isAxiosError } from "axios";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -39,9 +40,13 @@ export default function Login() {
       // Refresh auth context so guards recognize authenticated state
       await refreshUser();
       navigate("/dashboard", { replace: true });
-    } catch (err: any) {
-      const detail = err?.response?.data?.detail || "Login failed";
-      setError(detail);
+    } catch (err: unknown) {
+      // Attempt to extract server error detail if available
+      type ErrorResponse = { detail?: string };
+      const detail = isAxiosError(err)
+        ? (err.response?.data as ErrorResponse | undefined)?.detail
+        : undefined;
+      setError(detail ?? "Login failed");
     } finally {
       setIsLoading(false);
     }

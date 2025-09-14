@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import apiClient from "@/lib/api.ts";
+import apiClient from "@/lib/api";
 
 type AuthUser = {
   id: number;
