@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn } from "lucide-react";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api.ts";
 
 export default function Login() {
   const [username, setUsername] = useState("");

@@ -55,7 +55,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DriverApplications from "./DriverApplications";
 import { useToast } from "@/lib/toast";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api.ts";
 
 type ApiDriver = {
   id: number
@@ -141,7 +141,7 @@ export default function Drivers() {
   const [vehicleFilters, setVehicleFilters] = useState<string[]>([]);
   const [licenseFilters, setLicenseFilters] = useState<string[]>([]);
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
-  const [selectedDriver, setSelectedDriver] = useState<any>(null);
+  const [selectedDriver, setSelectedDriver] = useState<UiDriver | null>(null);
   const { success, error: toastError } = useToast();
 
   useEffect(() => {
@@ -155,14 +155,14 @@ export default function Drivers() {
         if (searchTerm.trim()) params.set("search", searchTerm.trim());
         const { data } = await apiClient.get<{ count: number; next: string | null; previous: string | null; results: ApiDriver[] }>(
           `drivers/list/?${params.toString()}`,
-          { signal: controller.signal as any }
+          { signal: controller.signal as AbortSignal }
         );
         if (!ignore) {
           setApiDrivers(data.results);
           setCount(data.count);
         }
-      } catch (e: any) {
-        if (!ignore) setError(e?.message ?? "Unknown error");
+      } catch (e) {
+        if (!ignore) setError(e instanceof Error ? e.message : "Unknown error");
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -176,7 +176,7 @@ export default function Drivers() {
     const controller = new AbortController();
     const fetchStats = async () => {
       try {
-        const { data } = await apiClient.get<DriverStats>(`drivers/stats/`, { signal: controller.signal as any });
+        const { data } = await apiClient.get<DriverStats>(`drivers/stats/`, { signal: controller.signal as AbortSignal });
         if (!ignore) setStats(data);
       } catch (e) {
         // leave stats as null on error
@@ -259,7 +259,7 @@ export default function Drivers() {
   const hasActiveFilters = onlineFilters.length > 0 || statusFilters.length > 0 || 
                           vehicleFilters.length > 0 || licenseFilters.length > 0;
 
-  const handleSuspendClick = (driver: any) => {
+  const handleSuspendClick = (driver: UiDriver) => {
     setSelectedDriver(driver);
     setSuspendModalOpen(true);
   };
@@ -272,11 +272,13 @@ export default function Drivers() {
       // Ensure CSRF token (users app provides the endpoint)
       let csrftoken = "";
       try {
-        const { data: csrfData } = await apiClient.get("users/csrf/");
-        csrftoken = (csrfData as any)?.csrftoken || "";
-      } catch {}
+        const { data: csrfData } = await apiClient.get<{ csrftoken?: string }>("users/csrf/");
+        csrftoken = csrfData?.csrftoken || "";
+      } catch {
+        /* ignore */
+      }
 
-      const { data: updated } = await apiClient.post(
+      const { data: updated } = await apiClient.post<ApiDriver>(
         `drivers/${selectedDriver.id}/${action}/`,
         {},
         { headers: { "X-CSRFToken": csrftoken } }
@@ -293,8 +295,9 @@ export default function Drivers() {
       );
       setSuspendModalOpen(false);
       setSelectedDriver(null);
-    } catch (e: any) {
-      toastError("Network error", e?.message || "Please try again");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Please try again";
+      toastError("Network error", message);
     }
   };
 

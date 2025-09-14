@@ -50,7 +50,7 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination";
 import { useToast } from "@/lib/toast";
-import apiClient from "@/lib/api";
+import apiClient from "@/lib/api.ts";
 
 type ApiUser = {
   id: number
@@ -115,7 +115,7 @@ export default function Users() {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [kycFilters, setKycFilters] = useState<string[]>([]);
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<UiUser | null>(null);
   const { success, error: toastError } = useToast();
 
   useEffect(() => {
@@ -129,14 +129,14 @@ export default function Users() {
         if (searchTerm.trim()) params.set("search", searchTerm.trim());
         const { data } = await apiClient.get<{ count: number; next: string | null; previous: string | null; results: ApiUser[] }>(
           `users/list/?${params.toString()}`,
-          { signal: controller.signal as any }
+          { signal: controller.signal as AbortSignal }
         );
         if (!ignore) {
           setApiUsers(data.results);
           setCount(data.count);
         }
-      } catch (e: any) {
-        if (!ignore) setError(e?.message ?? "Unknown error");
+      } catch (e) {
+        if (!ignore) setError(e instanceof Error ? e.message : "Unknown error");
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -192,7 +192,7 @@ export default function Users() {
 
   const hasActiveFilters = statusFilters.length > 0 || kycFilters.length > 0;
 
-  const handleSuspendClick = (user: any) => {
+  const handleSuspendClick = (user: UiUser) => {
     setSelectedUser(user);
     setSuspendModalOpen(true);
   };
@@ -205,11 +205,13 @@ export default function Users() {
       // Ensure CSRF token
       let csrftoken = "";
       try {
-        const { data: csrfData } = await apiClient.get("users/csrf/");
-        csrftoken = (csrfData as any)?.csrftoken || "";
-      } catch {}
+        const { data: csrfData } = await apiClient.get<{ csrftoken?: string }>("users/csrf/");
+        csrftoken = csrfData?.csrftoken || "";
+      } catch {
+        /* ignore */
+      }
 
-      const { data: updated } = await apiClient.post(
+      const { data: updated } = await apiClient.post<ApiUser>(
         `users/${selectedUser.id}/${action}/`,
         {},
         { headers: { "X-CSRFToken": csrftoken } }
@@ -226,8 +228,9 @@ export default function Users() {
       );
       setSuspendModalOpen(false);
       setSelectedUser(null);
-    } catch (e: any) {
-      toastError("Network error", e?.message || "Please try again");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Please try again";
+      toastError("Network error", message);
     }
   };
 
