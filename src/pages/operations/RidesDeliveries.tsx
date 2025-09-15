@@ -43,8 +43,8 @@ type ApiDelivery = {
 }
 
 export default function RidesDeliveries() {
-  const [selectedRide, setSelectedRide] = useState<any>(null);
-  const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
+  const [selectedRide, setSelectedRide] = useState<ApiRide | null>(null);
+  const [selectedDelivery, setSelectedDelivery] = useState<ApiDelivery | null>(null);
 
   const [rides, setRides] = useState<ApiRide[]>([]);
   const [ridesCount, setRidesCount] = useState(0);
@@ -57,6 +57,9 @@ export default function RidesDeliveries() {
   const [deliveriesPage, setDeliveriesPage] = useState(1);
   const deliveriesPageSize = 5;
   const [deliveriesLoading, setDeliveriesLoading] = useState(false);
+
+  const [stats, setStats] = useState<{ active_rides: number; active_deliveries: number; weekly_rides: number; weekly_deliveries: number } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -89,6 +92,30 @@ export default function RidesDeliveries() {
     fetchDeliveries();
     return () => { ignore = true; controller.abort(); };
   }, [deliveriesPage]);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const [ridesStatsRes, deliveriesStatsRes] = await Promise.all([
+          apiClient.get<{ active_rides: number; weekly_rides: number }>("rides/stats/", { signal: controller.signal as AbortSignal }),
+          apiClient.get<{ active_deliveries: number; weekly_deliveries: number }>("deliveries/stats/", { signal: controller.signal as AbortSignal }),
+        ]);
+        if (!ignore) {
+          setStats({
+            active_rides: ridesStatsRes.data.active_rides,
+            weekly_rides: ridesStatsRes.data.weekly_rides,
+            active_deliveries: deliveriesStatsRes.data.active_deliveries,
+            weekly_deliveries: deliveriesStatsRes.data.weekly_deliveries,
+          });
+        }
+      } finally { if (!ignore) setStatsLoading(false); }
+    };
+    fetchStats();
+    return () => { ignore = true; controller.abort(); };
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -134,29 +161,25 @@ export default function RidesDeliveries() {
       <div className="grid gap-4 md:grid-cols-4">
         <StatsCard
           title="Active Rides"
-          value="24"
-          change={{ value: "12%", positive: true }}
+          value={statsLoading ? "…" : (stats?.active_rides ?? 0)}
           icon={Car}
           description="Currently ongoing"
         />
         <StatsCard
           title="Active Deliveries"
-          value="18"
-          change={{ value: "8%", positive: true }}
+          value={statsLoading ? "…" : (stats?.active_deliveries ?? 0)}
           icon={Package}
           description="In transit"
         />
         <StatsCard
           title="Weekly Rides"
-          value="1,247"
-          change={{ value: "23%", positive: true }}
+          value={statsLoading ? "…" : (stats?.weekly_rides ?? 0)}
           icon={Car}
           description="This week"
         />
         <StatsCard
           title="Weekly Deliveries"
-          value="892"
-          change={{ value: "15%", positive: true }}
+          value={statsLoading ? "…" : (stats?.weekly_deliveries ?? 0)}
           icon={Package}
           description="This week"
         />

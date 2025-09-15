@@ -6,6 +6,7 @@ from .models import Delivery
 from .serializers import DeliverySerializer
 from .pagination import DeliveryPagination
 from django.db.models import Q
+from django.utils import timezone
 
 
 @api_view(["GET"])
@@ -25,4 +26,18 @@ def list_deliveries(request):
     page = paginator.paginate_queryset(queryset, request)
     serializer = DeliverySerializer(page, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def delivery_stats(request):
+    now = timezone.now()
+    week_start = (now - timezone.timedelta(days=now.weekday())).date()
+
+    active_deliveries = Delivery.objects.filter(status="shipping").count()
+    weekly_deliveries = Delivery.objects.filter(time__date__gte=week_start).count()
+
+    return Response({
+        "active_deliveries": active_deliveries,
+        "weekly_deliveries": weekly_deliveries,
+    })
 
