@@ -27,28 +27,28 @@ export const useUniversalToast = () => {
 
 const toastVariants = {
   success: {
-    bg: 'bg-success/10 border-success/20',
-    text: 'text-success-foreground',
+    bg: 'bg-[hsl(var(--toast-success-bg))] border-[hsl(var(--toast-success-border))]',
+    text: 'text-[hsl(var(--toast-success-foreground))]',
     icon: CheckCircle,
-    iconColor: 'text-success'
+    iconColor: 'text-[hsl(var(--toast-success-icon))]'
   },
   error: {
-    bg: 'bg-destructive/10 border-destructive/20',
-    text: 'text-destructive-foreground',
+    bg: 'bg-[hsl(var(--toast-error-bg))] border-[hsl(var(--toast-error-border))]',
+    text: 'text-[hsl(var(--toast-error-foreground))]',
     icon: AlertCircle,
-    iconColor: 'text-destructive'
+    iconColor: 'text-[hsl(var(--toast-error-icon))]'
   },
   warning: {
-    bg: 'bg-warning/10 border-warning/20',
-    text: 'text-warning-foreground',
+    bg: 'bg-[hsl(var(--toast-warning-bg))] border-[hsl(var(--toast-warning-border))]',
+    text: 'text-[hsl(var(--toast-warning-foreground))]',
     icon: AlertTriangle,
-    iconColor: 'text-warning'
+    iconColor: 'text-[hsl(var(--toast-warning-icon))]'
   },
   info: {
-    bg: 'bg-primary/10 border-primary/20',
-    text: 'text-primary-foreground',
+    bg: 'bg-[hsl(var(--toast-info-bg))] border-[hsl(var(--toast-info-border))]',
+    text: 'text-[hsl(var(--toast-info-foreground))]',
     icon: Info,
-    iconColor: 'text-primary'
+    iconColor: 'text-[hsl(var(--toast-info-icon))]'
   },
   default: {
     bg: 'bg-card border-border',
@@ -96,19 +96,19 @@ export const UniversalToastProvider: React.FC<{ children: React.ReactNode }> = (
                 "flex items-start gap-3 p-4 rounded-lg border shadow-lg backdrop-blur-sm animate-fade-in",
                 variant.bg,
                 variant.text,
-                "min-w-[320px] max-w-[400px]"
+                "min-w-[320px] max-w-[420px]"
               )}
             >
               <Icon className={cn("h-5 w-5 mt-0.5 flex-shrink-0", variant.iconColor)} />
               
               <div className="flex-1 min-w-0">
                 {toast.title && (
-                  <div className="font-medium text-sm mb-1">
+                  <div className="font-semibold text-sm mb-1">
                     {toast.title}
                   </div>
                 )}
                 {toast.description && (
-                  <div className="text-sm opacity-90">
+                  <div className="text-sm opacity-95">
                     {toast.description}
                   </div>
                 )}

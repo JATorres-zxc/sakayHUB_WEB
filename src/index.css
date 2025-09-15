@@ -44,6 +44,27 @@
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
+
+    /* Toast Semantic Tokens (light) */
+    --toast-success-bg: 142 72% 30%;
+    --toast-success-foreground: 0 0% 98%;
+    --toast-success-border: 142 70% 24%;
+    --toast-success-icon: 0 0% 98%;
+
+    --toast-error-bg: 0 72% 44%;
+    --toast-error-foreground: 0 0% 98%;
+    --toast-error-border: 0 70% 36%;
+    --toast-error-icon: 0 0% 98%;
+
+    --toast-warning-bg: 38 92% 52%;
+    --toast-warning-foreground: 0 0% 8%;
+    --toast-warning-border: 38 92% 44%;
+    --toast-warning-icon: 0 0% 8%;
+
+    --toast-info-bg: 217 91% 56%;
+    --toast-info-foreground: 0 0% 98%;
+    --toast-info-border: 217 85% 49%;
+    --toast-info-icon: 0 0% 98%;
     
     /* Borders and Inputs */
     --border: 0 0% 90%;
@@ -121,6 +142,27 @@
     
     --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 8%;
+
+    /* Toast Semantic Tokens (dark) */
+    --toast-success-bg: 142 70% 28%;
+    --toast-success-foreground: 0 0% 98%;
+    --toast-success-border: 142 70% 22%;
+    --toast-success-icon: 0 0% 98%;
+
+    --toast-error-bg: 0 75% 42%;
+    --toast-error-foreground: 0 0% 98%;
+    --toast-error-border: 0 70% 36%;
+    --toast-error-icon: 0 0% 98%;
+
+    --toast-warning-bg: 38 92% 48%;
+    --toast-warning-foreground: 0 0% 8%;
+    --toast-warning-border: 38 92% 40%;
+    --toast-warning-icon: 0 0% 8%;
+
+    --toast-info-bg: 217 91% 52%;
+    --toast-info-foreground: 0 0% 98%;
+    --toast-info-border: 217 85% 46%;
+    --toast-info-icon: 0 0% 98%;
     
     /* Borders and Inputs */
     --border: 0 0% 15%;
