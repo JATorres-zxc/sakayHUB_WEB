@@ -1,5 +1,6 @@
 from django.urls import path
+from . import views
 
 urlpatterns = [
-    # You can add your API endpoints here later
+    path('list/', views.list_rides, name='rides-list'),
 ]

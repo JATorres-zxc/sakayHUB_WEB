@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,70 +16,79 @@ import {
   XCircle
 } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import apiClient from "@/lib/api";
 
-const mockRides = [
-  {
-    id: "R001",
-    customer: "John Doe",
-    driver: "Mike Wilson",
-    pickup: "Mall of Asia",
-    destination: "BGC Taguig",
-    status: "ongoing",
-    fare: "₱180",
-    time: "2:15 PM"
-  },
-  {
-    id: "R002", 
-    customer: "Sarah Chen",
-    driver: "Carlos Reyes",
-    pickup: "Makati CBD",
-    destination: "Ortigas Center",
-    status: "completed",
-    fare: "₱250",
-    time: "1:45 PM"
-  },
-  {
-    id: "R003",
-    customer: "Robert Kim",
-    driver: "Anna Garcia",
-    pickup: "Quezon City",
-    destination: "Manila",
-    status: "cancelled",
-    fare: "₱200",
-    time: "1:30 PM"
-  }
-];
+type ApiRide = {
+  id: number
+  customer: string
+  driver: string
+  pickup: string
+  destination: string
+  status: string
+  fare: number | string
+  time: string
+}
 
-const mockDeliveries = [
-  {
-    id: "D001",
-    sender: "FoodPanda Store",
-    receiver: "Maria Santos",
-    driver: "Jose Cruz",
-    package: "Food Order - 2x Burger Meals",
-    pickup: "McDonald's Ayala",
-    destination: "Unit 502, One Ayala",
-    status: "shipping",
-    fee: "₱45",
-    time: "2:30 PM"
-  },
-  {
-    id: "D002",
-    sender: "Shopee Logistics",
-    receiver: "David Lee",
-    driver: "Pedro Morales",
-    package: "Electronics - iPhone Case",
-    pickup: "Shopee Warehouse",
-    destination: "Alabang Hills Village",
-    status: "delivered",
-    fee: "₱60",
-    time: "12:45 PM"
-  }
-];
+type ApiDelivery = {
+  id: number
+  sender: string
+  receiver: string
+  driver: string
+  package: string
+  pickup: string
+  destination: string
+  status: string
+  fee: number | string
+  time: string
+}
 
 export default function RidesDeliveries() {
   const [selectedRide, setSelectedRide] = useState<any>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
+
+  const [rides, setRides] = useState<ApiRide[]>([]);
+  const [ridesCount, setRidesCount] = useState(0);
+  const [ridesPage, setRidesPage] = useState(1);
+  const ridesPageSize = 5;
+  const [ridesLoading, setRidesLoading] = useState(false);
+
+  const [deliveries, setDeliveries] = useState<ApiDelivery[]>([]);
+  const [deliveriesCount, setDeliveriesCount] = useState(0);
+  const [deliveriesPage, setDeliveriesPage] = useState(1);
+  const deliveriesPageSize = 5;
+  const [deliveriesLoading, setDeliveriesLoading] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchRides = async () => {
+      try {
+        setRidesLoading(true);
+        const params = new URLSearchParams({ page: String(ridesPage), page_size: String(ridesPageSize) });
+        const { data } = await apiClient.get<{ count: number; results: ApiRide[] }>(`rides/list/?${params.toString()}`,
+          { signal: controller.signal as AbortSignal });
+        if (!ignore) { setRides(data.results); setRidesCount(data.count); }
+      } finally { if (!ignore) setRidesLoading(false); }
+    };
+    fetchRides();
+    return () => { ignore = true; controller.abort(); };
+  }, [ridesPage]);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchDeliveries = async () => {
+      try {
+        setDeliveriesLoading(true);
+        const params = new URLSearchParams({ page: String(deliveriesPage), page_size: String(deliveriesPageSize) });
+        const { data } = await apiClient.get<{ count: number; results: ApiDelivery[] }>(`deliveries/list/?${params.toString()}`,
+          { signal: controller.signal as AbortSignal });
+        if (!ignore) { setDeliveries(data.results); setDeliveriesCount(data.count); }
+      } finally { if (!ignore) setDeliveriesLoading(false); }
+    };
+    fetchDeliveries();
+    return () => { ignore = true; controller.abort(); };
+  }, [deliveriesPage]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -175,7 +184,7 @@ export default function RidesDeliveries() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockRides.map((ride) => (
+                {rides.map((ride) => (
                   <TableRow key={ride.id}>
                     <TableCell className="font-mono text-sm">{ride.id}</TableCell>
                     <TableCell>{ride.customer}</TableCell>
@@ -190,7 +199,7 @@ export default function RidesDeliveries() {
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{ride.fare}</TableCell>
+                    <TableCell className="font-medium">{typeof ride.fare === 'number' ? `₱${ride.fare.toFixed(2)}` : ride.fare}</TableCell>
                     <TableCell>
                       <Dialog>
                         <DialogTrigger asChild>
@@ -234,6 +243,15 @@ export default function RidesDeliveries() {
               </TableBody>
             </Table>
           </CardContent>
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            {ridesLoading ? <span>Loading rides…</span> : <span>Showing {rides.length} of {ridesCount}</span>}
+          </div>
+          <div className="flex gap-2 mt-2">
+            <Button variant="outline" size="sm" disabled={ridesPage === 1} onClick={() => setRidesPage(p => Math.max(1, p-1))}>Previous</Button>
+            <Button variant="outline" size="sm" disabled={ridesPage * ridesPageSize >= ridesCount} onClick={() => setRidesPage(p => p+1)}>Next</Button>
+          </div>
+        </div>
         </Card>
 
         {/* Active Deliveries */}
@@ -256,7 +274,7 @@ export default function RidesDeliveries() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockDeliveries.map((delivery) => (
+                {deliveries.map((delivery) => (
                   <TableRow key={delivery.id}>
                     <TableCell className="font-mono text-sm">{delivery.id}</TableCell>
                     <TableCell className="text-sm">{delivery.package}</TableCell>
@@ -268,7 +286,7 @@ export default function RidesDeliveries() {
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{delivery.fee}</TableCell>
+                    <TableCell className="font-medium">{typeof delivery.fee === 'number' ? `₱${delivery.fee.toFixed(2)}` : delivery.fee}</TableCell>
                     <TableCell>
                       <Dialog>
                         <DialogTrigger asChild>
@@ -331,6 +349,15 @@ export default function RidesDeliveries() {
               </TableBody>
             </Table>
           </CardContent>
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            {deliveriesLoading ? <span>Loading deliveries…</span> : <span>Showing {deliveries.length} of {deliveriesCount}</span>}
+          </div>
+          <div className="flex gap-2 mt-2">
+            <Button variant="outline" size="sm" disabled={deliveriesPage === 1} onClick={() => setDeliveriesPage(p => Math.max(1, p-1))}>Previous</Button>
+            <Button variant="outline" size="sm" disabled={deliveriesPage * deliveriesPageSize >= deliveriesCount} onClick={() => setDeliveriesPage(p => p+1)}>Next</Button>
+          </div>
+        </div>
         </Card>
       </div>
     </div>
