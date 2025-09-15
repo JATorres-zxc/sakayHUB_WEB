@@ -63,6 +63,36 @@ export default function Login() {
           </p>
         </div>
 
+        {/* Test Credentials Card */}
+        <Card className="border-dashed border-muted bg-muted/20">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Test credentials for developers and viewers
+              </p>
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="font-medium">Username:</span> admin
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">Password:</span> qweasd123
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setUsername("admin");
+                  setPassword("qweasd123");
+                }}
+                className="w-full"
+              >
+                Auto-fill Credentials
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Login Form */}
         <Card>
           <CardHeader className="text-center">
