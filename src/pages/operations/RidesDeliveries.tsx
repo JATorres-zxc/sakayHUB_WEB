@@ -69,6 +69,9 @@ export default function RidesDeliveries() {
   const [stats, setStats] = useState<{ active_rides: number; active_deliveries: number; weekly_rides: number; weekly_deliveries: number } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
 
+  const ridesTotalPages = useMemo(() => Math.max(1, Math.ceil(ridesCount / ridesPageSize)), [ridesCount]);
+  const deliveriesTotalPages = useMemo(() => Math.max(1, Math.ceil(deliveriesCount / deliveriesPageSize)), [deliveriesCount]);
+
   useEffect(() => {
     let ignore = false;
     const controller = new AbortController();
@@ -275,13 +278,35 @@ export default function RidesDeliveries() {
             </Table>
 
             <div className="mt-4">
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                {ridesLoading ? <span>Loading rides…</span> : <span>Showing {rides.length} of {ridesCount}</span>}
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Button variant="outline" size="sm" disabled={ridesPage === 1} onClick={() => setRidesPage(p => Math.max(1, p-1))}>Previous</Button>
-                <Button variant="outline" size="sm" disabled={ridesPage * ridesPageSize >= ridesCount} onClick={() => setRidesPage(p => p+1)}>Next</Button>
-              </div>
+              <Pagination className="mt-2">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (ridesPage > 1) setRidesPage(ridesPage - 1); }}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: ridesTotalPages }, (_, i) => i + 1)
+                    .slice(Math.max(0, ridesPage - 3), Math.min(ridesTotalPages, ridesPage + 2))
+                    .map((p) => (
+                      <PaginationItem key={`rides-${p}`}>
+                        <PaginationLink
+                          href="#"
+                          isActive={p === ridesPage}
+                          onClick={(e) => { e.preventDefault(); setRidesPage(p); }}
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (ridesPage < ridesTotalPages) setRidesPage(ridesPage + 1); }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           </CardContent>
         </Card>
@@ -382,13 +407,35 @@ export default function RidesDeliveries() {
             </Table>
 
             <div className="mt-4">
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                {deliveriesLoading ? <span>Loading deliveries…</span> : <span>Showing {deliveries.length} of {deliveriesCount}</span>}
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Button variant="outline" size="sm" disabled={deliveriesPage === 1} onClick={() => setDeliveriesPage(p => Math.max(1, p-1))}>Previous</Button>
-                <Button variant="outline" size="sm" disabled={deliveriesPage * deliveriesPageSize >= deliveriesCount} onClick={() => setDeliveriesPage(p => p+1)}>Next</Button>
-              </div>
+              <Pagination className="mt-2">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (deliveriesPage > 1) setDeliveriesPage(deliveriesPage - 1); }}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: deliveriesTotalPages }, (_, i) => i + 1)
+                    .slice(Math.max(0, deliveriesPage - 3), Math.min(deliveriesTotalPages, deliveriesPage + 2))
+                    .map((p) => (
+                      <PaginationItem key={`deliveries-${p}`}>
+                        <PaginationLink
+                          href="#"
+                          isActive={p === deliveriesPage}
+                          onClick={(e) => { e.preventDefault(); setDeliveriesPage(p); }}
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (deliveriesPage < deliveriesTotalPages) setDeliveriesPage(deliveriesPage + 1); }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           </CardContent>
         </Card>
