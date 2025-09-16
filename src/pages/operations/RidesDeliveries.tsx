@@ -4,6 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { 
   MapPin, 
   Car, 
@@ -265,16 +273,17 @@ export default function RidesDeliveries() {
                 ))}
               </TableBody>
             </Table>
+
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                {ridesLoading ? <span>Loading rides…</span> : <span>Showing {rides.length} of {ridesCount}</span>}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <Button variant="outline" size="sm" disabled={ridesPage === 1} onClick={() => setRidesPage(p => Math.max(1, p-1))}>Previous</Button>
+                <Button variant="outline" size="sm" disabled={ridesPage * ridesPageSize >= ridesCount} onClick={() => setRidesPage(p => p+1)}>Next</Button>
+              </div>
+            </div>
           </CardContent>
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            {ridesLoading ? <span>Loading rides…</span> : <span>Showing {rides.length} of {ridesCount}</span>}
-          </div>
-          <div className="flex gap-2 mt-2">
-            <Button variant="outline" size="sm" disabled={ridesPage === 1} onClick={() => setRidesPage(p => Math.max(1, p-1))}>Previous</Button>
-            <Button variant="outline" size="sm" disabled={ridesPage * ridesPageSize >= ridesCount} onClick={() => setRidesPage(p => p+1)}>Next</Button>
-          </div>
-        </div>
         </Card>
 
         {/* Active Deliveries */}
@@ -371,16 +380,17 @@ export default function RidesDeliveries() {
                 ))}
               </TableBody>
             </Table>
+
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                {deliveriesLoading ? <span>Loading deliveries…</span> : <span>Showing {deliveries.length} of {deliveriesCount}</span>}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <Button variant="outline" size="sm" disabled={deliveriesPage === 1} onClick={() => setDeliveriesPage(p => Math.max(1, p-1))}>Previous</Button>
+                <Button variant="outline" size="sm" disabled={deliveriesPage * deliveriesPageSize >= deliveriesCount} onClick={() => setDeliveriesPage(p => p+1)}>Next</Button>
+              </div>
+            </div>
           </CardContent>
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            {deliveriesLoading ? <span>Loading deliveries…</span> : <span>Showing {deliveries.length} of {deliveriesCount}</span>}
-          </div>
-          <div className="flex gap-2 mt-2">
-            <Button variant="outline" size="sm" disabled={deliveriesPage === 1} onClick={() => setDeliveriesPage(p => Math.max(1, p-1))}>Previous</Button>
-            <Button variant="outline" size="sm" disabled={deliveriesPage * deliveriesPageSize >= deliveriesCount} onClick={() => setDeliveriesPage(p => p+1)}>Next</Button>
-          </div>
-        </div>
         </Card>
       </div>
     </div>
