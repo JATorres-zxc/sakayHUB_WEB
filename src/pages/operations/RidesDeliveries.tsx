@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { 
   MapPin, 
   Car, 
@@ -80,6 +88,23 @@ const mockDeliveries = [
 export default function RidesDeliveries() {
   const [selectedRide, setSelectedRide] = useState<any>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
+  const [ridesPage, setRidesPage] = useState(1);
+  const [deliveriesPage, setDeliveriesPage] = useState(1);
+  const pageSize = 5;
+
+  // Pagination logic for rides
+  const totalRidesPages = useMemo(() => Math.max(1, Math.ceil(mockRides.length / pageSize)), []);
+  const paginatedRides = useMemo(() => {
+    const startIndex = (ridesPage - 1) * pageSize;
+    return mockRides.slice(startIndex, startIndex + pageSize);
+  }, [ridesPage]);
+
+  // Pagination logic for deliveries
+  const totalDeliveriesPages = useMemo(() => Math.max(1, Math.ceil(mockDeliveries.length / pageSize)), []);
+  const paginatedDeliveries = useMemo(() => {
+    const startIndex = (deliveriesPage - 1) * pageSize;
+    return mockDeliveries.slice(startIndex, startIndex + pageSize);
+  }, [deliveriesPage]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -175,7 +200,7 @@ export default function RidesDeliveries() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockRides.map((ride) => (
+                {paginatedRides.map((ride) => (
                   <TableRow key={ride.id}>
                     <TableCell className="font-mono text-sm">{ride.id}</TableCell>
                     <TableCell>{ride.customer}</TableCell>
@@ -233,6 +258,36 @@ export default function RidesDeliveries() {
                 ))}
               </TableBody>
             </Table>
+
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (ridesPage > 1) setRidesPage(ridesPage - 1); }}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalRidesPages }, (_, i) => i + 1).slice(Math.max(0, ridesPage - 3), Math.min(totalRidesPages, ridesPage + 2)).map((p) => (
+                    <PaginationItem key={p}>
+                      <PaginationLink
+                        href="#"
+                        isActive={p === ridesPage}
+                        onClick={(e) => { e.preventDefault(); setRidesPage(p); }}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (ridesPage < totalRidesPages) setRidesPage(ridesPage + 1); }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </CardContent>
         </Card>
 
@@ -256,7 +311,134 @@ export default function RidesDeliveries() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockDeliveries.map((delivery) => (
+                {paginatedDeliveries.map((delivery) => (
+                  <TableRow key={delivery.id}>
+                    <TableCell className="font-mono text-sm">{delivery.id}</TableCell>
+                    <TableCell className="text-sm">{delivery.package}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-center">
+                        <Badge variant="outline" className={getStatusColor(delivery.status)}>
+                          {getStatusIcon(delivery.status)}
+                          <span className="ml-1 capitalize">{delivery.status}</span>
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{delivery.fee}</TableCell>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setSelectedDelivery(delivery)}
+                          >
+                            Details
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Delivery Details - {selectedDelivery?.id}</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-sm font-medium">Sender</label>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <User className="w-3 h-3" />
+                                  {selectedDelivery?.sender}
+                                </p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium">Receiver</label>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <User className="w-3 h-3" />
+                                  {selectedDelivery?.receiver}
+                                </p>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Package Details</label>
+                              <p className="text-sm text-muted-foreground">{selectedDelivery?.package}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Route</label>
+                              <p className="text-sm text-muted-foreground">
+                                {selectedDelivery?.pickup} → {selectedDelivery?.destination}
+                              </p>
+                            </div>
+                            <div className="border rounded-lg p-3 bg-muted/30">
+                              <label className="text-sm font-medium">Proof of Delivery</label>
+                              <div className="mt-2 space-y-2">
+                                <div className="h-32 bg-muted rounded border border-dashed flex items-center justify-center">
+                                  <span className="text-sm text-muted-foreground">Photo placeholder</span>
+                                </div>
+                                <div className="h-16 bg-muted rounded border border-dashed flex items-center justify-center">
+                                  <span className="text-sm text-muted-foreground">Signature placeholder</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (deliveriesPage > 1) setDeliveriesPage(deliveriesPage - 1); }}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalDeliveriesPages }, (_, i) => i + 1).slice(Math.max(0, deliveriesPage - 3), Math.min(totalDeliveriesPages, deliveriesPage + 2)).map((p) => (
+                    <PaginationItem key={p}>
+                      <PaginationLink
+                        href="#"
+                        isActive={p === deliveriesPage}
+                        onClick={(e) => { e.preventDefault(); setDeliveriesPage(p); }}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); if (deliveriesPage < totalDeliveriesPages) setDeliveriesPage(deliveriesPage + 1); }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Active Deliveries */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Active Deliveries
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Package</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Fee</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedDeliveries.map((delivery) => (
                   <TableRow key={delivery.id}>
                     <TableCell className="font-mono text-sm">{delivery.id}</TableCell>
                     <TableCell className="text-sm">{delivery.package}</TableCell>
