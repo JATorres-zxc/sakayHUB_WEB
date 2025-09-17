@@ -51,8 +51,7 @@ type ApiDelivery = {
 }
 
 export default function RidesDeliveries() {
-  const [selectedRide, setSelectedRide] = useState<ApiRide | null>(null);
-  const [selectedDelivery, setSelectedDelivery] = useState<ApiDelivery | null>(null);
+  
 
   const [rides, setRides] = useState<ApiRide[]>([]);
   const [ridesCount, setRidesCount] = useState(0);
@@ -240,32 +239,31 @@ export default function RidesDeliveries() {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => setSelectedRide(ride)}
                           >
                             Manage
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Manage Ride - {selectedRide?.id}</DialogTitle>
+                            <DialogTitle>Manage Ride - {ride.id}</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <label className="text-sm font-medium">Customer</label>
-                                <p className="text-sm text-muted-foreground">{selectedRide?.customer}</p>
+                                <p className="text-sm text-muted-foreground">{ride.customer}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium">Driver</label>
-                                <p className="text-sm text-muted-foreground">{selectedRide?.driver}</p>
+                                <p className="text-sm text-muted-foreground">{ride.driver}</p>
                               </div>
                             </div>
                             <div className="space-y-2">
                               <Button variant="outline" className="w-full">
-                                Reassign Driver
+                                Reassign Driver (?)
                               </Button>
                               <Button variant="destructive" className="w-full">
-                                Cancel Ride
+                                Cancel Ride (?)
                               </Button>
                             </div>
                           </div>
@@ -350,14 +348,13 @@ export default function RidesDeliveries() {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => setSelectedDelivery(delivery)}
                           >
                             Details
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Delivery Details - {selectedDelivery?.id}</DialogTitle>
+                            <DialogTitle>Delivery Details - {delivery.id}</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -365,25 +362,25 @@ export default function RidesDeliveries() {
                                 <label className="text-sm font-medium">Sender</label>
                                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                                   <User className="w-3 h-3" />
-                                  {selectedDelivery?.sender}
+                                  {delivery.sender}
                                 </p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium">Receiver</label>
                                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                                   <User className="w-3 h-3" />
-                                  {selectedDelivery?.receiver}
+                                  {delivery.receiver}
                                 </p>
                               </div>
                             </div>
                             <div>
                               <label className="text-sm font-medium">Package Details</label>
-                              <p className="text-sm text-muted-foreground">{selectedDelivery?.package}</p>
+                              <p className="text-sm text-muted-foreground">{delivery.package}</p>
                             </div>
                             <div>
                               <label className="text-sm font-medium">Route</label>
                               <p className="text-sm text-muted-foreground">
-                                {selectedDelivery?.pickup} → {selectedDelivery?.destination}
+                                {delivery.pickup} → {delivery.destination}
                               </p>
                             </div>
                             <div className="border rounded-lg p-3 bg-muted/30">
