@@ -38,14 +38,7 @@ import {
   Star,
   RotateCcw
 } from "lucide-react";
-import { 
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { SimplePagination } from "@/components/ui/pagination";
 import {
   Accordion,
   AccordionContent,
@@ -626,33 +619,7 @@ export default function Drivers() {
           </Table>
 
           <div className="mt-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), Math.min(totalPages, page + 2)).map((p) => (
-                  <PaginationItem key={p}>
-                    <PaginationLink
-                      href="#"
-                      isActive={p === page}
-                      onClick={(e) => { e.preventDefault(); setPage(p); }}
-                    >
-                      {p}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <SimplePagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </div>
         </CardContent>
       </Card>

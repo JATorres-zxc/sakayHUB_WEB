@@ -1,3 +1,43 @@
-from django.shortcuts import render
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-# Create your views here.
+from .models import Ride
+from .serializers import RideSerializer
+from .pagination import RidePagination
+from django.db.models import Q
+from django.utils import timezone
+from django.db.models import Count
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_rides(request):
+    queryset = Ride.objects.select_related("customer", "driver").all().order_by("-time", "id")
+    search = request.GET.get("search", "").strip()
+    if search:
+        queryset = queryset.filter(
+            Q(customer__name__icontains=search)
+            | Q(driver__name__icontains=search)
+            | Q(pickup__icontains=search)
+            | Q(destination__icontains=search)
+        )
+    paginator = RidePagination()
+    page = paginator.paginate_queryset(queryset, request)
+    serializer = RideSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def ride_stats(request):
+    now = timezone.now()
+    week_start = (now - timezone.timedelta(days=now.weekday())).date()
+
+    active_rides = Ride.objects.filter(status="ongoing").count()
+    weekly_rides = Ride.objects.filter(time__date__gte=week_start).count()
+
+    return Response({
+        "active_rides": active_rides,
+        "weekly_rides": weekly_rides,
+    })
+
