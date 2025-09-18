@@ -4,14 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { SimplePagination } from "@/components/ui/pagination";
 import { 
   MapPin, 
   Car, 
@@ -276,35 +269,7 @@ export default function RidesDeliveries() {
             </Table>
 
             <div className="mt-4">
-              <Pagination className="mt-2">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); if (ridesPage > 1) setRidesPage(ridesPage - 1); }}
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: ridesTotalPages }, (_, i) => i + 1)
-                    .slice(Math.max(0, ridesPage - 3), Math.min(ridesTotalPages, ridesPage + 2))
-                    .map((p) => (
-                      <PaginationItem key={`rides-${p}`}>
-                        <PaginationLink
-                          href="#"
-                          isActive={p === ridesPage}
-                          onClick={(e) => { e.preventDefault(); setRidesPage(p); }}
-                        >
-                          {p}
-                        </PaginationLink>
-                      </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); if (ridesPage < ridesTotalPages) setRidesPage(ridesPage + 1); }}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              <SimplePagination page={ridesPage} totalPages={ridesTotalPages} onPageChange={setRidesPage} />
             </div>
           </CardContent>
         </Card>
@@ -404,35 +369,7 @@ export default function RidesDeliveries() {
             </Table>
 
             <div className="mt-4">
-              <Pagination className="mt-2">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); if (deliveriesPage > 1) setDeliveriesPage(deliveriesPage - 1); }}
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: deliveriesTotalPages }, (_, i) => i + 1)
-                    .slice(Math.max(0, deliveriesPage - 3), Math.min(deliveriesTotalPages, deliveriesPage + 2))
-                    .map((p) => (
-                      <PaginationItem key={`deliveries-${p}`}>
-                        <PaginationLink
-                          href="#"
-                          isActive={p === deliveriesPage}
-                          onClick={(e) => { e.preventDefault(); setDeliveriesPage(p); }}
-                        >
-                          {p}
-                        </PaginationLink>
-                      </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); if (deliveriesPage < deliveriesTotalPages) setDeliveriesPage(deliveriesPage + 1); }}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              <SimplePagination page={deliveriesPage} totalPages={deliveriesTotalPages} onPageChange={setDeliveriesPage} />
             </div>
           </CardContent>
         </Card>
