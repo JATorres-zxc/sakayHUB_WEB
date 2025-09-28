@@ -2,7 +2,8 @@ import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { ButtonProps, buttonVariants } from "@/components/ui/button"
+import { Button, ButtonProps, buttonVariants } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav
@@ -106,6 +107,60 @@ const PaginationEllipsis = ({
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"
 
+type SimplePaginationProps = {
+  page: number
+  totalPages: number
+  onPageChange: (page: number) => void
+  className?: string
+}
+
+const SimplePagination = ({ page, totalPages, onPageChange, className }: SimplePaginationProps) => {
+  const [input, setInput] = React.useState<string>(String(page))
+  React.useEffect(() => { setInput(String(page)) }, [page])
+
+  const clamp = (value: number) => Math.max(1, Math.min(totalPages, value))
+  const commit = () => {
+    const val = parseInt(input || "1", 10)
+    const clamped = Number.isNaN(val) ? 1 : clamp(val)
+    onPageChange(clamped)
+  }
+
+  return (
+    <div className={cn("mt-2 mx-auto w-full flex items-center justify-center gap-3 text-sm", className)}>
+      <Button
+        variant="outline"
+        size="default"
+        disabled={page <= 1}
+        onClick={() => onPageChange(clamp(page - 1))}
+      >
+        Prev
+      </Button>
+      <div className="flex items-center gap-2">
+        <Input
+          className="w-16 h-9 text-center"
+          value={input}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          onChange={(e) => setInput(e.target.value.replace(/[^0-9]/g, ""))}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit()
+          }}
+        />
+        <span>of {totalPages}</span>
+      </div>
+      <Button
+        variant="outline"
+        size="default"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(clamp(page + 1))}
+      >
+        Next
+      </Button>
+    </div>
+  )
+}
+
 export {
   Pagination,
   PaginationContent,
@@ -114,4 +169,5 @@ export {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  SimplePagination,
 }

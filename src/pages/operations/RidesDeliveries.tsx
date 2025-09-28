@@ -1,17 +1,10 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { SimplePagination } from "@/components/ui/pagination";
 import { 
   MapPin, 
   Car, 
@@ -24,87 +17,108 @@ import {
   XCircle
 } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import apiClient from "@/lib/api";
 
-const mockRides = [
-  {
-    id: "R001",
-    customer: "John Doe",
-    driver: "Mike Wilson",
-    pickup: "Mall of Asia",
-    destination: "BGC Taguig",
-    status: "ongoing",
-    fare: "₱180",
-    time: "2:15 PM"
-  },
-  {
-    id: "R002", 
-    customer: "Sarah Chen",
-    driver: "Carlos Reyes",
-    pickup: "Makati CBD",
-    destination: "Ortigas Center",
-    status: "completed",
-    fare: "₱250",
-    time: "1:45 PM"
-  },
-  {
-    id: "R003",
-    customer: "Robert Kim",
-    driver: "Anna Garcia",
-    pickup: "Quezon City",
-    destination: "Manila",
-    status: "cancelled",
-    fare: "₱200",
-    time: "1:30 PM"
-  }
-];
+type ApiRide = {
+  id: number
+  customer: string
+  driver: string
+  pickup: string
+  destination: string
+  status: string
+  fare: number | string
+  time: string
+}
 
-const mockDeliveries = [
-  {
-    id: "D001",
-    sender: "FoodPanda Store",
-    receiver: "Maria Santos",
-    driver: "Jose Cruz",
-    package: "Food Order - 2x Burger Meals",
-    pickup: "McDonald's Ayala",
-    destination: "Unit 502, One Ayala",
-    status: "shipping",
-    fee: "₱45",
-    time: "2:30 PM"
-  },
-  {
-    id: "D002",
-    sender: "Shopee Logistics",
-    receiver: "David Lee",
-    driver: "Pedro Morales",
-    package: "Electronics - iPhone Case",
-    pickup: "Shopee Warehouse",
-    destination: "Alabang Hills Village",
-    status: "delivered",
-    fee: "₱60",
-    time: "12:45 PM"
-  }
-];
+type ApiDelivery = {
+  id: number
+  sender: string
+  receiver: string
+  driver: string
+  package: string
+  pickup: string
+  destination: string
+  status: string
+  fee: number | string
+  time: string
+}
 
 export default function RidesDeliveries() {
-  const [selectedRide, setSelectedRide] = useState<any>(null);
-  const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
-  const [ridesPage, setRidesPage] = useState(1);
-  const [deliveriesPage, setDeliveriesPage] = useState(1);
-  const pageSize = 5;
+  
 
-  // Pagination logic for rides
-  const totalRidesPages = useMemo(() => Math.max(1, Math.ceil(mockRides.length / pageSize)), []);
-  const paginatedRides = useMemo(() => {
-    const startIndex = (ridesPage - 1) * pageSize;
-    return mockRides.slice(startIndex, startIndex + pageSize);
+  const [rides, setRides] = useState<ApiRide[]>([]);
+  const [ridesCount, setRidesCount] = useState(0);
+  const [ridesPage, setRidesPage] = useState(1);
+  const ridesPageSize = 5;
+  const [ridesLoading, setRidesLoading] = useState(false);
+
+  const [deliveries, setDeliveries] = useState<ApiDelivery[]>([]);
+  const [deliveriesCount, setDeliveriesCount] = useState(0);
+  const [deliveriesPage, setDeliveriesPage] = useState(1);
+  const deliveriesPageSize = 5;
+  const [deliveriesLoading, setDeliveriesLoading] = useState(false);
+
+  const [stats, setStats] = useState<{ active_rides: number; active_deliveries: number; weekly_rides: number; weekly_deliveries: number } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  const ridesTotalPages = useMemo(() => Math.max(1, Math.ceil(ridesCount / ridesPageSize)), [ridesCount]);
+  const deliveriesTotalPages = useMemo(() => Math.max(1, Math.ceil(deliveriesCount / deliveriesPageSize)), [deliveriesCount]);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchRides = async () => {
+      try {
+        setRidesLoading(true);
+        const params = new URLSearchParams({ page: String(ridesPage), page_size: String(ridesPageSize) });
+        const { data } = await apiClient.get<{ count: number; results: ApiRide[] }>(`rides/list/?${params.toString()}`,
+          { signal: controller.signal as AbortSignal });
+        if (!ignore) { setRides(data.results); setRidesCount(data.count); }
+      } finally { if (!ignore) setRidesLoading(false); }
+    };
+    fetchRides();
+    return () => { ignore = true; controller.abort(); };
   }, [ridesPage]);
 
-  // Pagination logic for deliveries
-  const totalDeliveriesPages = useMemo(() => Math.max(1, Math.ceil(mockDeliveries.length / pageSize)), []);
-  const paginatedDeliveries = useMemo(() => {
-    const startIndex = (deliveriesPage - 1) * pageSize;
-    return mockDeliveries.slice(startIndex, startIndex + pageSize);
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchDeliveries = async () => {
+      try {
+        setDeliveriesLoading(true);
+        const params = new URLSearchParams({ page: String(deliveriesPage), page_size: String(deliveriesPageSize) });
+        const { data } = await apiClient.get<{ count: number; results: ApiDelivery[] }>(`deliveries/list/?${params.toString()}`,
+          { signal: controller.signal as AbortSignal });
+        if (!ignore) { setDeliveries(data.results); setDeliveriesCount(data.count); }
+      } finally { if (!ignore) setDeliveriesLoading(false); }
+    };
+    fetchDeliveries();
+    return () => { ignore = true; controller.abort(); };
   }, [deliveriesPage]);
+
+  useEffect(() => {
+    let ignore = false;
+    const controller = new AbortController();
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const [ridesStatsRes, deliveriesStatsRes] = await Promise.all([
+          apiClient.get<{ active_rides: number; weekly_rides: number }>("rides/stats/", { signal: controller.signal as AbortSignal }),
+          apiClient.get<{ active_deliveries: number; weekly_deliveries: number }>("deliveries/stats/", { signal: controller.signal as AbortSignal }),
+        ]);
+        if (!ignore) {
+          setStats({
+            active_rides: ridesStatsRes.data.active_rides,
+            weekly_rides: ridesStatsRes.data.weekly_rides,
+            active_deliveries: deliveriesStatsRes.data.active_deliveries,
+            weekly_deliveries: deliveriesStatsRes.data.weekly_deliveries,
+          });
+        }
+      } finally { if (!ignore) setStatsLoading(false); }
+    };
+    fetchStats();
+    return () => { ignore = true; controller.abort(); };
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -142,7 +156,7 @@ export default function RidesDeliveries() {
         <h1 className="text-2xl font-semibold tracking-tight">Rides & Deliveries</h1>
         <Button className="gap-2">
           <MapPin className="w-4 h-4" />
-          Live Map View
+          Live Map View (?)
         </Button>
       </div>
 
@@ -150,29 +164,25 @@ export default function RidesDeliveries() {
       <div className="grid gap-4 md:grid-cols-4">
         <StatsCard
           title="Active Rides"
-          value="24"
-          change={{ value: "12%", positive: true }}
+          value={statsLoading ? "…" : (stats?.active_rides ?? 0)}
           icon={Car}
           description="Currently ongoing"
         />
         <StatsCard
           title="Active Deliveries"
-          value="18"
-          change={{ value: "8%", positive: true }}
+          value={statsLoading ? "…" : (stats?.active_deliveries ?? 0)}
           icon={Package}
           description="In transit"
         />
         <StatsCard
           title="Weekly Rides"
-          value="1,247"
-          change={{ value: "23%", positive: true }}
+          value={statsLoading ? "…" : (stats?.weekly_rides ?? 0)}
           icon={Car}
           description="This week"
         />
         <StatsCard
           title="Weekly Deliveries"
-          value="892"
-          change={{ value: "15%", positive: true }}
+          value={statsLoading ? "…" : (stats?.weekly_deliveries ?? 0)}
           icon={Package}
           description="This week"
         />
@@ -200,7 +210,7 @@ export default function RidesDeliveries() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedRides.map((ride) => (
+                {rides.map((ride) => (
                   <TableRow key={ride.id}>
                     <TableCell className="font-mono text-sm">{ride.id}</TableCell>
                     <TableCell>{ride.customer}</TableCell>
@@ -215,39 +225,38 @@ export default function RidesDeliveries() {
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{ride.fare}</TableCell>
+                    <TableCell className="font-medium">{typeof ride.fare === 'number' ? `₱${ride.fare.toFixed(2)}` : ride.fare}</TableCell>
                     <TableCell>
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => setSelectedRide(ride)}
                           >
                             Manage
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Manage Ride - {selectedRide?.id}</DialogTitle>
+                            <DialogTitle>Manage Ride - {ride.id}</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <label className="text-sm font-medium">Customer</label>
-                                <p className="text-sm text-muted-foreground">{selectedRide?.customer}</p>
+                                <p className="text-sm text-muted-foreground">{ride.customer}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium">Driver</label>
-                                <p className="text-sm text-muted-foreground">{selectedRide?.driver}</p>
+                                <p className="text-sm text-muted-foreground">{ride.driver}</p>
                               </div>
                             </div>
                             <div className="space-y-2">
                               <Button variant="outline" className="w-full">
-                                Reassign Driver
+                                Reassign Driver (?)
                               </Button>
                               <Button variant="destructive" className="w-full">
-                                Cancel Ride
+                                Cancel Ride (?)
                               </Button>
                             </div>
                           </div>
@@ -260,33 +269,7 @@ export default function RidesDeliveries() {
             </Table>
 
             <div className="mt-4">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); if (ridesPage > 1) setRidesPage(ridesPage - 1); }}
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: totalRidesPages }, (_, i) => i + 1).slice(Math.max(0, ridesPage - 3), Math.min(totalRidesPages, ridesPage + 2)).map((p) => (
-                    <PaginationItem key={p}>
-                      <PaginationLink
-                        href="#"
-                        isActive={p === ridesPage}
-                        onClick={(e) => { e.preventDefault(); setRidesPage(p); }}
-                      >
-                        {p}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); if (ridesPage < totalRidesPages) setRidesPage(ridesPage + 1); }}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              <SimplePagination page={ridesPage} totalPages={ridesTotalPages} onPageChange={setRidesPage} />
             </div>
           </CardContent>
         </Card>
@@ -311,7 +294,7 @@ export default function RidesDeliveries() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedDeliveries.map((delivery) => (
+                {deliveries.map((delivery) => (
                   <TableRow key={delivery.id}>
                     <TableCell className="font-mono text-sm">{delivery.id}</TableCell>
                     <TableCell className="text-sm">{delivery.package}</TableCell>
@@ -323,21 +306,20 @@ export default function RidesDeliveries() {
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{delivery.fee}</TableCell>
+                    <TableCell className="font-medium">{typeof delivery.fee === 'number' ? `₱${delivery.fee.toFixed(2)}` : delivery.fee}</TableCell>
                     <TableCell>
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => setSelectedDelivery(delivery)}
                           >
                             Details
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Delivery Details - {selectedDelivery?.id}</DialogTitle>
+                            <DialogTitle>Delivery Details - {delivery.id}</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -345,25 +327,25 @@ export default function RidesDeliveries() {
                                 <label className="text-sm font-medium">Sender</label>
                                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                                   <User className="w-3 h-3" />
-                                  {selectedDelivery?.sender}
+                                  {delivery.sender}
                                 </p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium">Receiver</label>
                                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                                   <User className="w-3 h-3" />
-                                  {selectedDelivery?.receiver}
+                                  {delivery.receiver}
                                 </p>
                               </div>
                             </div>
                             <div>
                               <label className="text-sm font-medium">Package Details</label>
-                              <p className="text-sm text-muted-foreground">{selectedDelivery?.package}</p>
+                              <p className="text-sm text-muted-foreground">{delivery.package}</p>
                             </div>
                             <div>
                               <label className="text-sm font-medium">Route</label>
                               <p className="text-sm text-muted-foreground">
-                                {selectedDelivery?.pickup} → {selectedDelivery?.destination}
+                                {delivery.pickup} → {delivery.destination}
                               </p>
                             </div>
                             <div className="border rounded-lg p-3 bg-muted/30">
@@ -387,131 +369,8 @@ export default function RidesDeliveries() {
             </Table>
 
             <div className="mt-4">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); if (deliveriesPage > 1) setDeliveriesPage(deliveriesPage - 1); }}
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: totalDeliveriesPages }, (_, i) => i + 1).slice(Math.max(0, deliveriesPage - 3), Math.min(totalDeliveriesPages, deliveriesPage + 2)).map((p) => (
-                    <PaginationItem key={p}>
-                      <PaginationLink
-                        href="#"
-                        isActive={p === deliveriesPage}
-                        onClick={(e) => { e.preventDefault(); setDeliveriesPage(p); }}
-                      >
-                        {p}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); if (deliveriesPage < totalDeliveriesPages) setDeliveriesPage(deliveriesPage + 1); }}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              <SimplePagination page={deliveriesPage} totalPages={deliveriesTotalPages} onPageChange={setDeliveriesPage} />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Active Deliveries */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              Active Deliveries
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Package</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Fee</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedDeliveries.map((delivery) => (
-                  <TableRow key={delivery.id}>
-                    <TableCell className="font-mono text-sm">{delivery.id}</TableCell>
-                    <TableCell className="text-sm">{delivery.package}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-center">
-                        <Badge variant="outline" className={getStatusColor(delivery.status)}>
-                          {getStatusIcon(delivery.status)}
-                          <span className="ml-1 capitalize">{delivery.status}</span>
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{delivery.fee}</TableCell>
-                    <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => setSelectedDelivery(delivery)}
-                          >
-                            Details
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Delivery Details - {selectedDelivery?.id}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="text-sm font-medium">Sender</label>
-                                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <User className="w-3 h-3" />
-                                  {selectedDelivery?.sender}
-                                </p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium">Receiver</label>
-                                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <User className="w-3 h-3" />
-                                  {selectedDelivery?.receiver}
-                                </p>
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium">Package Details</label>
-                              <p className="text-sm text-muted-foreground">{selectedDelivery?.package}</p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium">Route</label>
-                              <p className="text-sm text-muted-foreground">
-                                {selectedDelivery?.pickup} → {selectedDelivery?.destination}
-                              </p>
-                            </div>
-                            <div className="border rounded-lg p-3 bg-muted/30">
-                              <label className="text-sm font-medium">Proof of Delivery</label>
-                              <div className="mt-2 space-y-2">
-                                <div className="h-32 bg-muted rounded border border-dashed flex items-center justify-center">
-                                  <span className="text-sm text-muted-foreground">Photo placeholder</span>
-                                </div>
-                                <div className="h-16 bg-muted rounded border border-dashed flex items-center justify-center">
-                                  <span className="text-sm text-muted-foreground">Signature placeholder</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           </CardContent>
         </Card>
       </div>
