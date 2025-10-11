@@ -29,8 +29,19 @@ class Driver(models.Model):
     license_status = models.CharField(max_length=12, choices=LICENSE_CHOICES)
     rating = models.FloatField(default=0)
     total_rides = models.PositiveIntegerField(default=0)
+    total_sakays = models.PositiveIntegerField(default=0)
+    number_of_cancellations = models.PositiveIntegerField(default=0)
     earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     online = models.BooleanField(default=False)
+    feedback = models.TextField(blank=True, default="")
+    license_number = models.CharField(max_length=64, blank=True, null=True, unique=True)
+    license_expiry = models.DateField(blank=True, null=True)
+    license_photo = models.ImageField(upload_to="drivers/license_photos/", blank=True, null=True)
+    vehicle_model = models.CharField(max_length=100, blank=True, default="")
+    vehicle_color = models.CharField(max_length=50, blank=True, default="")
+    plate_number = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    profile_photo = models.ImageField(upload_to="drivers/profile_photos/", blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
     join_date = models.DateField()
     last_active = models.DateTimeField()
 
@@ -38,6 +49,8 @@ class Driver(models.Model):
         constraints = [
             models.CheckConstraint(check=Q(total_rides__gte=0), name="driver_total_rides_non_negative"),
             models.CheckConstraint(check=Q(earnings__gte=0), name="driver_earnings_non_negative"),
+            models.CheckConstraint(check=Q(total_sakays__gte=0), name="driver_total_sakays_non_negative"),
+            models.CheckConstraint(check=Q(number_of_cancellations__gte=0), name="driver_cancellations_non_negative"),
         ]
 
     def clean(self):
@@ -46,6 +59,10 @@ class Driver(models.Model):
             errors["total_rides"] = "Total rides cannot be negative."
         if self.earnings is not None and self.earnings < 0:
             errors["earnings"] = "Earnings cannot be negative."
+        if self.total_sakays is not None and self.total_sakays < 0:
+            errors["total_sakays"] = "Total sakays cannot be negative."
+        if self.number_of_cancellations is not None and self.number_of_cancellations < 0:
+            errors["number_of_cancellations"] = "Number of cancellations cannot be negative."
         if errors:
             raise ValidationError(errors)
 

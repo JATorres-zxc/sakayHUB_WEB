@@ -35,6 +35,7 @@ def csrf(request):
 
 @csrf_protect
 @require_POST
+# for admin login only
 def login(request):
     username = request.POST.get("username")
     password = request.POST.get("password")
