@@ -55,7 +55,9 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'rest_framework',
+    'rest_framework.authtoken',
 
+    'auth.apps.AuthConfig',
     'users',
     'drivers',
     'rides',
