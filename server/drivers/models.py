@@ -2,6 +2,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q
 from django.core.exceptions import ValidationError
+import uuid
 
 class Driver(models.Model):
     STATUS_CHOICES = [
@@ -54,6 +55,10 @@ class Driver(models.Model):
         return super().save(*args, **kwargs)
 
 
+def generate_application_reference() -> str:
+    return f"APP-{uuid.uuid4().hex[:8].upper()}"
+
+
 class DriverApplication(models.Model):
     APPLICATION_STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -69,10 +74,50 @@ class DriverApplication(models.Model):
         ('van', 'Van'),
     ]
 
-    name = models.CharField(max_length=100)
+    reference_number = models.CharField(max_length=20, unique=True, editable=False, default=generate_application_reference)
+    first_name = models.CharField(max_length=100, default='')
+    last_name = models.CharField(max_length=100, default='')
+    name = models.CharField(max_length=200, blank=True)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
-    applied_at = models.DateTimeField()
-    vehicle_type = models.CharField(max_length=20, choices=VEHICLE_CHOICES)
-    license_number = models.CharField(max_length=32)
+    address = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    province = models.CharField(max_length=100, blank=True)
+    zip_code = models.CharField(max_length=20, blank=True)
+    applied_at = models.DateTimeField(auto_now_add=True)
+    vehicle_type = models.CharField(max_length=20, choices=VEHICLE_CHOICES, default='motorcycle')
+    vehicle_model = models.CharField(max_length=100, blank=True)
+    vehicle_color = models.CharField(max_length=50, blank=True)
+    license_plate = models.CharField(max_length=32, blank=True)
+    license_number = models.CharField(max_length=50, blank=True)
+    or_number = models.CharField(max_length=64, blank=True)
+    cr_number = models.CharField(max_length=64, blank=True)
+    service_types = models.JSONField(default=list, blank=True)
+    license_file = models.FileField(upload_to='driver_applications/licenses/', null=True, blank=True)
+    orcr_file = models.FileField(upload_to='driver_applications/orcr/', null=True, blank=True)
+    nbi_file = models.FileField(upload_to='driver_applications/nbi/', null=True, blank=True)
     status = models.CharField(max_length=12, choices=APPLICATION_STATUS_CHOICES, default='pending')
+
+    class Meta:
+        ordering = ['-applied_at']
+
+    def save(self, *args, **kwargs):
+        if not self.name:
+            full = f"{self.first_name} {self.last_name}".strip()
+            self.name = full or self.name
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.reference_number} - {self.name or self.email}"
+
+
+class DriverApplicationMotorPhoto(models.Model):
+    application = models.ForeignKey(DriverApplication, related_name='motor_photos', on_delete=models.CASCADE)
+    photo = models.FileField(upload_to='driver_applications/motor_photos/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self) -> str:
+        return f"Photo for {self.application.reference_number} @ {self.uploaded_at.isoformat()}"

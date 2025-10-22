@@ -19,8 +19,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from drivers import views as driver_views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/driver-applications/', driver_views.submit_driver_application, name='driver-applications-public'),
     path('api/users/', include('users.urls')),
     path('api/drivers/', include('drivers.urls')),
     path('api/rides/', include('rides.urls')),

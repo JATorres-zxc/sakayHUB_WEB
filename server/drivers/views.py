@@ -1,9 +1,18 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+import json
+
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import Driver, DriverApplication
-from .serializers import DriverSerializer, DriverApplicationSerializer, DriverStatusUpdateSerializer
+from .serializers import (
+    DriverSerializer,
+    DriverApplicationSerializer,
+    DriverApplicationCreateSerializer,
+    DriverStatusUpdateSerializer,
+)
 from .pagination import DriverPagination
 from django.db.models import Count, Avg, Sum, Q
 from django.utils import timezone
@@ -75,6 +84,67 @@ def driver_application_stats(request):
         "approved_today": approved_today_count,
         "total_month": total_month_count,
     })
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+@parser_classes([MultiPartParser, FormParser])
+def submit_driver_application(request):
+    data = request.data
+
+    raw_service_types = data.get("service_types") or data.get("serviceTypes")
+    if isinstance(raw_service_types, str) and raw_service_types:
+        try:
+            service_types = json.loads(raw_service_types)
+        except json.JSONDecodeError:
+            return Response({"serviceTypes": "Invalid JSON payload."}, status=status.HTTP_400_BAD_REQUEST)
+    elif isinstance(raw_service_types, (list, tuple)):
+        service_types = list(raw_service_types)
+    else:
+        service_types = []
+
+    phone = data.get("phone") or data.get("phone_number")
+
+    motor_photos = [
+        file for key, file in request.FILES.items()
+        if key.startswith("motor_photo")
+    ]
+
+    payload = {
+        "first_name": (data.get("first_name") or "").strip(),
+        "last_name": (data.get("last_name") or "").strip(),
+        "email": (data.get("email") or "").strip(),
+        "phone": (phone or "").strip(),
+        "address": (data.get("address") or "").strip(),
+        "city": (data.get("city") or "").strip(),
+        "province": (data.get("province") or "").strip(),
+        "zip_code": (data.get("zip_code") or "").strip(),
+        "vehicle_type": (data.get("vehicle_type") or "motorcycle").strip().lower(),
+        "vehicle_model": (data.get("vehicle_model") or "").strip(),
+        "vehicle_color": (data.get("vehicle_color") or "").strip(),
+        "license_plate": (data.get("license_plate") or "").strip(),
+        "license_number": (data.get("license_number") or "").strip(),
+        "or_number": (data.get("or_number") or "").strip(),
+        "cr_number": (data.get("cr_number") or "").strip(),
+        "service_types": service_types,
+        "license_file": request.FILES.get("license_file"),
+        "orcr_file": request.FILES.get("orcr_file"),
+        "nbi_file": request.FILES.get("nbi_file"),
+        "motor_photos": motor_photos,
+    }
+
+    serializer = DriverApplicationCreateSerializer(data=payload)
+    if serializer.is_valid():
+        application = serializer.save()
+        return Response(
+            {
+                "reference_number": application.reference_number,
+                "status": application.status,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["PATCH"])
