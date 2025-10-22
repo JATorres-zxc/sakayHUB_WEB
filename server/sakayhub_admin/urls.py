@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/support/', include('support.urls')),
     path('api/communication/', include('communication.urls')),
     path('api/system/', include('system.urls')),
+    path('api/auth/', include('auth.urls')),
 ]
 
 if settings.DEBUG:

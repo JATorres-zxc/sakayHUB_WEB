@@ -11,6 +11,9 @@ class UserSerializer(serializers.ModelSerializer):
             "name",
             "email",
             "phone",
+            "password",
+            "date_of_birth",
+            "favorite_locations",
             "status",
             "kyc_status",
             "total_rides",
@@ -23,6 +26,13 @@ class UserSerializer(serializers.ModelSerializer):
         """Validate that total_spent is not negative."""
         if value < 0:
             raise serializers.ValidationError("Total spent cannot be negative.")
+        return value
+
+    def validate_favorite_locations(self, value):
+        if value in (None, ""):
+            return []
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Favorite locations must be a list.")
         return value
 
 
